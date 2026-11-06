@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>MineNumbers</title>
+<meta name="theme-color" content="#7cc4f2">
+<meta name="description" content="Juego de números con bloques para preescolar">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon-48.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+/* Layout: one-screen phone game; sky band on top, grass/dirt ground at bottom, big blocky tap targets in between */
+:root{
+  --sky:#7cc4f2; --sky-deep:#4f9fd8;
+  --grass:#5fae3b; --grass-dark:#3f7f26;
+  --dirt:#8a5a34; --dirt-dark:#6b4224;
+  --stone:#9a9a9a; --stone-dark:#6f6f6f;
+  --wood:#b5874e; --wood-dark:#8a6334;
+  --ink:#1f2a1a; --paper:#fffaf0;
+  --emerald:#2ec26b; --emerald-dark:#178a47;
+  --gold:#f5c542; --bad:#e2574c;
+  --font-display:"Pixelify Sans","Courier New",monospace;
+  --font-body:"Fredoka","Trebuchet MS",system-ui,sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{background:var(--sky);color:var(--ink);font-family:var(--font-body);overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.app{height:100%;display:flex;flex-direction:column;position:relative;
+  background:linear-gradient(var(--sky) 0%,var(--sky) 70%,var(--sky-deep) 100%)}
+.screen{flex:1;display:flex;flex-direction:column;min-height:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 0;gap:12px}
+.ground{height:56px;flex:none;background:
+  linear-gradient(var(--grass) 0 14px,var(--grass-dark) 14px 18px,transparent 18px),
+  repeating-linear-gradient(90deg,var(--dirt) 0 22px,var(--dirt-dark) 22px 26px,var(--dirt) 26px 44px);
+  padding-bottom:env(safe-area-inset-bottom,0px)}
+.cloud{position:absolute;background:#fff;opacity:.85;height:18px;box-shadow:18px 0 #fff,36px 0 #fff,18px -14px #fff;pointer-events:none}
+@media (prefers-reduced-motion:no-preference){.cloud{animation:drift 60s linear infinite}}
+@keyframes drift{from{transform:translateX(-80px)}to{transform:translateX(110vw)}}
+
+/* top bar */
+.bar{display:flex;align-items:center;gap:10px;flex:none}
+.bar .spacer{flex:1}
+.gems{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.25);color:#fff;padding:6px 12px 6px 8px;font:700 22px/1 var(--font-body);font-variant-numeric:tabular-nums}
+.gem{width:22px;height:22px;background:var(--emerald);clip-path:polygon(50% 0,100% 40%,50% 100%,0 40%);box-shadow:inset -5px -5px 0 var(--emerald-dark)}
+.gem.big{width:44px;height:44px}
+
+/* buttons: block style */
+.btn{appearance:none;border:0;cursor:pointer;font:700 22px/1.1 var(--font-body);color:#fff;padding:16px 18px;min-height:64px;
+  background:var(--grass);box-shadow:inset 0 -6px 0 var(--grass-dark),inset 0 4px 0 rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;gap:10px}
+.btn:active{transform:translateY(3px);box-shadow:inset 0 -3px 0 var(--grass-dark)}
+.btn:focus-visible,.swatch:focus-visible,.choice:focus-visible{outline:4px solid var(--gold);outline-offset:2px}
+.btn.wood{background:var(--wood);box-shadow:inset 0 -6px 0 var(--wood-dark),inset 0 4px 0 rgba(255,255,255,.2)}
+.btn.stone{background:var(--stone);box-shadow:inset 0 -6px 0 var(--stone-dark),inset 0 4px 0 rgba(255,255,255,.25)}
+.btn.icon{min-height:52px;width:52px;padding:0;background:rgba(0,0,0,.25);box-shadow:none}
+.btn.icon svg{width:28px;height:28px;fill:#fff}
+
+h1{font:700 clamp(30px,9vw,44px)/1 var(--font-display);color:#fff;text-shadow:3px 3px 0 var(--sky-deep),5px 5px 0 rgba(0,0,0,.2);margin:0;text-align:center;text-wrap:balance}
+.panel{background:var(--paper);box-shadow:0 0 0 4px var(--wood-dark);padding:14px}
+.prompt{font:700 26px/1.15 var(--font-body);text-align:center;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.3);text-wrap:balance;margin:0}
+
+/* avatar */
+.avatar{--s:8px;position:relative;width:calc(var(--s)*8);height:calc(var(--s)*16);flex:none}
+.avatar div{position:absolute}
+.av-head{left:0;top:0;width:calc(var(--s)*8);height:calc(var(--s)*8);background:var(--skin)}
+.av-hair{left:0;top:0;width:calc(var(--s)*8);height:calc(var(--s)*2);background:var(--hair);box-shadow:0 var(--s) 0 0 var(--hair)}
+.av-hair.side{width:var(--s);height:calc(var(--s)*4);box-shadow:calc(var(--s)*7) 0 0 var(--hair)}
+.av-eye{top:calc(var(--s)*4);width:var(--s);height:var(--s);background:#fff;box-shadow:var(--s) 0 0 var(--eye)}
+.av-eye.l{left:var(--s)} .av-eye.r{left:calc(var(--s)*5)}
+.av-mouth{left:calc(var(--s)*3);top:calc(var(--s)*6);width:calc(var(--s)*2);height:calc(var(--s)*.75);background:#7a3b2e}
+.av-body{left:calc(var(--s)*2);top:calc(var(--s)*8);width:calc(var(--s)*4);height:calc(var(--s)*4);background:var(--shirt)}
+.av-arm{top:calc(var(--s)*8);width:calc(var(--s)*2);height:calc(var(--s)*4);background:var(--skin);box-shadow:inset 0 calc(var(--s)*1.5) 0 var(--shirt)}
+.av-arm.l{left:0}.av-arm.r{left:calc(var(--s)*6)}
+.av-leg{top:calc(var(--s)*12);width:calc(var(--s)*2);height:calc(var(--s)*4);background:var(--pants);box-shadow:inset 0 calc(var(--s)*-1) 0 #3b3b3b}
+.av-leg.l{left:calc(var(--s)*2)}.av-leg.r{left:calc(var(--s)*4)}
+.av-hat{display:none}
+.avatar[data-hat="casco"] .av-hat{display:block;left:calc(var(--s)*-.5);top:calc(var(--s)*-1.5);width:calc(var(--s)*9);height:calc(var(--s)*2.5);background:#f2c230;box-shadow:inset 0 calc(var(--s)*-.6) 0 #c99a12}
+.avatar[data-hat="casco"] .av-hat::after{content:"";position:absolute;left:calc(var(--s)*3.5);top:calc(var(--s)*.4);width:calc(var(--s)*2);height:calc(var(--s)*1.4);background:#fffbd0;box-shadow:0 0 calc(var(--s)*1.5) #fff4a0}
+.avatar[data-hat="casco"],.avatar[data-hat="gorra"]{margin-top:calc(var(--s)*1.5)}
+.avatar[data-hat="pato"]{margin-top:calc(var(--s)*4)}
+.avatar[data-hat="navidad"]{margin-top:calc(var(--s)*5.5)}
+.avatar[data-hat="pato"] .av-hat{display:block;left:var(--s);top:calc(var(--s)*-2);width:calc(var(--s)*5);height:calc(var(--s)*2.5);background:#f5d63d;box-shadow:inset 0 calc(var(--s)*-.6) 0 #d9b520}
+.avatar[data-hat="pato"] .av-hat::before{content:"";position:absolute;left:calc(var(--s)*3);top:calc(var(--s)*-2);width:calc(var(--s)*2.5);height:calc(var(--s)*2.5);background:radial-gradient(circle at 62% 40%,#222 0 calc(var(--s)*.35),transparent calc(var(--s)*.35 + .5px)),#f5d63d}
+.avatar[data-hat="pato"] .av-hat::after{content:"";position:absolute;left:calc(var(--s)*5.5);top:calc(var(--s)*-1);width:calc(var(--s)*1.5);height:calc(var(--s)*.8);background:#f08a1c}
+.avatar[data-hat="navidad"] .av-hat{display:block;left:var(--s);top:calc(var(--s)*-1.5);width:calc(var(--s)*6);height:calc(var(--s)*1.5);background:radial-gradient(circle at 25% 50%,#e2574c 0 calc(var(--s)*.4),transparent calc(var(--s)*.4 + .5px)),radial-gradient(circle at 75% 50%,#f5c542 0 calc(var(--s)*.4),transparent calc(var(--s)*.4 + .5px)),#2e8b3a}
+.avatar[data-hat="navidad"] .av-hat::before{content:"";position:absolute;left:var(--s);top:calc(var(--s)*-1.5);width:calc(var(--s)*4);height:calc(var(--s)*1.5);background:radial-gradient(circle at 60% 50%,#2f6fd6 0 calc(var(--s)*.4),transparent calc(var(--s)*.4 + .5px)),#3a9a46}
+.avatar[data-hat="navidad"] .av-hat::after{content:"";position:absolute;left:calc(var(--s)*2);top:calc(var(--s)*-2.8);width:calc(var(--s)*2);height:calc(var(--s)*1.3);background:#46aa52;box-shadow:0 calc(var(--s)*-1) 0 calc(var(--s)*-.35) #f5c542}
+.avatar[data-hat="gorra"] .av-hat{display:block;left:0;top:calc(var(--s)*-1);width:calc(var(--s)*8);height:calc(var(--s)*2);background:var(--cap);box-shadow:calc(var(--s)*2) var(--s) 0 0 var(--cap)}
+@media (prefers-reduced-motion:no-preference){.avatar.happy{animation:hop .5s steps(2) 3}}
+@keyframes hop{50%{transform:translateY(-14px)}}
+
+/* creator */
+.creator{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-bottom:12px}
+.preview{flex:none;display:flex;justify-content:center;align-items:flex-end;padding:4px 0}
+.name-in{width:100%;font:700 26px var(--font-body);padding:12px 14px;border:0;box-shadow:inset 0 0 0 4px var(--wood-dark);background:var(--paper);color:var(--ink);text-align:center;border-radius:0}
+.name-in:focus{outline:none;box-shadow:inset 0 0 0 4px var(--gold)}
+.row-label{font:700 14px var(--font-body);color:var(--wood-dark);letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.swatch{width:46px;height:46px;border:0;cursor:pointer;box-shadow:inset 0 -5px 0 rgba(0,0,0,.25);position:relative}
+.swatch[aria-pressed="true"]{outline:4px solid var(--ink);outline-offset:2px}
+.swatch.txt{width:auto;padding:0 12px;font:700 16px var(--font-body);background:#e9dfc8;color:var(--ink)}
+
+/* home */
+.home{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:safe center;gap:12px;min-height:0;overflow-y:auto;padding-bottom:8px}
+.hello{font:700 26px var(--font-body);color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.3);margin:0;text-align:center}
+.menu{display:grid;gap:12px;width:100%;max-width:420px}
+.level{display:flex;gap:8px;justify-content:center}
+.level .btn{min-height:52px;font-size:18px;flex:1;max-width:200px}
+.level .btn[aria-pressed="false"]{opacity:.55}
+
+/* mine */
+.mine-grid{flex:1;display:grid;grid-template-columns:repeat(var(--cols,2),1fr);gap:12px;align-content:center;min-height:0;max-width:440px;width:100%;margin:0 auto}
+.ore{aspect-ratio:1;max-width:100%;border:0;cursor:pointer;position:relative;font:700 clamp(40px,14vw,64px)/1 var(--font-body);color:#fff;text-shadow:3px 3px 0 rgba(0,0,0,.45);
+  background-color:var(--stone);
+  background-image:linear-gradient(45deg,rgba(0,0,0,.12) 25%,transparent 25%,transparent 75%,rgba(0,0,0,.12) 75%),linear-gradient(45deg,rgba(0,0,0,.12) 25%,transparent 25%,transparent 75%,rgba(0,0,0,.12) 75%);
+  background-size:24px 24px;background-position:0 0,12px 12px;box-shadow:inset 0 -8px 0 var(--stone-dark),inset 0 6px 0 rgba(255,255,255,.25);font-variant-numeric:tabular-nums}
+.ore.broken{visibility:hidden}
+.ore.hint{outline:6px solid var(--gold);outline-offset:-6px}
+@media (prefers-reduced-motion:no-preference){.ore.hint{animation:pulse .8s ease-in-out infinite}.ore.shake,.choice.shake{animation:shake .35s}}
+@keyframes pulse{50%{transform:scale(1.05)}}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.timebar{height:14px;background:rgba(0,0,0,.25);flex:none}
+.timebar i{display:block;height:100%;width:100%;background:var(--gold);transform-origin:left}
+.chunk{position:absolute;width:14px;height:14px;background:var(--stone);box-shadow:inset -3px -3px 0 var(--stone-dark);pointer-events:none;z-index:5}
+.fly-gem{position:absolute;z-index:6;pointer-events:none}
+
+/* farm */
+.farm{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;min-height:0}
+.pens{display:flex;align-items:center;justify-content:center;gap:8px}
+.pen{flex:1;max-width:190px;min-height:120px;background:#9bd46d;box-shadow:0 0 0 6px var(--wood),0 0 0 9px var(--wood-dark);display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:6px;padding:10px}
+.plus{font:700 44px var(--font-body);color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.3)}
+.hen{width:40px;height:40px;position:relative;border:0;padding:0;background:none;cursor:pointer}
+.hen i{position:absolute;display:block}
+.hen .b{left:6px;top:12px;width:28px;height:22px;background:#fff;box-shadow:inset -4px -4px 0 #dcdcdc}
+.hen .h{left:20px;top:2px;width:16px;height:16px;background:#fff}
+.hen .c{left:24px;top:-3px;width:8px;height:5px;background:#e2574c}
+.hen .k{left:36px;top:8px;width:6px;height:5px;background:#f0a020}
+.hen .e{left:30px;top:6px;width:3px;height:3px;background:#222}
+.hen .l{left:12px;top:34px;width:3px;height:6px;background:#f0a020;box-shadow:10px 0 #f0a020}
+.hen .n{left:-4px;top:-8px;min-width:22px;height:22px;background:var(--gold);color:var(--ink);font:700 15px/22px var(--font-body);text-align:center;display:none}
+.hen.counted .n{display:block}
+@media (prefers-reduced-motion:no-preference){.hen.jump{animation:hop .4s steps(2) 2}}
+.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:440px;width:100%;margin:0 auto}
+.choice{aspect-ratio:1;max-width:100%;border:0;cursor:pointer;font:700 clamp(40px,13vw,60px)/1 var(--font-body);color:#fff;text-shadow:3px 3px 0 rgba(0,0,0,.4);
+  background:var(--wood);box-shadow:inset 0 -8px 0 var(--wood-dark),inset 0 6px 0 rgba(255,255,255,.2);
+  background-image:repeating-linear-gradient(0deg,transparent 0 14px,rgba(0,0,0,.1) 14px 16px)}
+.equation{font:700 34px var(--font-body);color:#fff;text-align:center;text-shadow:2px 2px 0 rgba(0,0,0,.3);min-height:42px;margin:0;font-variant-numeric:tabular-nums}
+.tip{font:600 16px var(--font-body);color:#fff;text-align:center;margin:0;opacity:.9}
+
+/* progress dots */
+.dots{display:flex;gap:6px;justify-content:center;flex:none}
+.dots i{width:16px;height:16px;background:rgba(0,0,0,.2)}
+.dots i.done{background:var(--emerald);box-shadow:inset -3px -3px 0 var(--emerald-dark)}
+
+/* reward */
+.reward{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.reward .won{display:flex;align-items:center;gap:10px;font:700 54px var(--font-body);color:#fff;text-shadow:3px 3px 0 rgba(0,0,0,.3)}
+
+/* hero = avatar + pet */
+.hero{display:flex;align-items:flex-end;gap:calc(6px*var(--k,1));flex:none}
+.pet{position:relative;flex:none;width:calc(44px*var(--k,1));height:calc(40px*var(--k,1))}
+.pet .hen,.pet .pig{position:absolute;left:0;bottom:0;width:44px;height:40px;transform:scale(var(--k,1));transform-origin:0 100%;cursor:default}
+.pig i{position:absolute;display:block}
+.pig .b{left:0;top:14px;width:34px;height:20px;background:#f4a6b8;box-shadow:inset -4px -4px 0 #e07f97}
+.pig .h{left:22px;top:4px;width:20px;height:20px;background:#f4a6b8}
+.pig .s{left:36px;top:12px;width:8px;height:7px;background:#e07f97}
+.pig .e{left:31px;top:8px;width:3px;height:3px;background:#222}
+.pig .l{left:4px;top:34px;width:5px;height:6px;background:#e07f97;box-shadow:20px 0 #e07f97}
+
+/* store hats */
+.avatar[data-hat="corona"],.avatar[data-hat="vaquero"]{margin-top:calc(var(--s)*2.5)}
+.avatar[data-hat="diamante"]{margin-top:calc(var(--s)*1.5)}
+.avatar[data-hat="corona"] .av-hat{display:block;left:calc(var(--s)*.5);top:calc(var(--s)*-1.5);width:calc(var(--s)*7);height:calc(var(--s)*1.8);background:radial-gradient(circle at 50% 50%,#e2574c 0 calc(var(--s)*.45),transparent calc(var(--s)*.45 + .5px)),radial-gradient(circle at 18% 50%,#2f6fd6 0 calc(var(--s)*.35),transparent calc(var(--s)*.35 + .5px)),radial-gradient(circle at 82% 50%,#2f6fd6 0 calc(var(--s)*.35),transparent calc(var(--s)*.35 + .5px)),#f5c542;box-shadow:inset 0 calc(var(--s)*-.4) 0 #c99a12}
+.avatar[data-hat="corona"] .av-hat::before{content:"";position:absolute;left:0;top:calc(var(--s)*-1.2);width:calc(var(--s)*7);height:calc(var(--s)*1.2);background:#f5c542;clip-path:polygon(0 100%,0 0,14% 100%,36% 100%,50% 0,64% 100%,86% 100%,100% 0,100% 100%)}
+.avatar[data-hat="vaquero"] .av-hat{display:block;left:calc(var(--s)*-1.5);top:calc(var(--s)*-.2);width:calc(var(--s)*11);height:var(--s);background:#8a5a2b;box-shadow:inset 0 calc(var(--s)*-.3) 0 #6b4224}
+.avatar[data-hat="vaquero"] .av-hat::before{content:"";position:absolute;left:calc(var(--s)*3);top:calc(var(--s)*-2.2);width:calc(var(--s)*5);height:calc(var(--s)*2.2);background:linear-gradient(transparent 60%,#3b2a1a 60% 85%,transparent 85%),#a06a35}
+.avatar[data-hat="diamante"] .av-hat{display:block;left:calc(var(--s)*-.5);top:calc(var(--s)*-1.2);width:calc(var(--s)*9);height:calc(var(--s)*3.2);background:#5ce1e6;box-shadow:inset 0 calc(var(--s)*-.7) 0 #2bb5bf,inset calc(var(--s)*.8) calc(var(--s)*.6) 0 #a8f3f5}
+
+/* pickaxe in hand */
+.av-tool{display:none}
+.avatar:not([data-tool="none"]){margin-right:calc(var(--s)*3)}
+.avatar:not([data-tool="none"]) .av-tool{display:block;left:calc(var(--s)*8.2);top:calc(var(--s)*7);width:calc(var(--s)*.9);height:calc(var(--s)*6.5);background:#8a6334;transform:rotate(25deg);transform-origin:50% 75%}
+.av-tool::after{content:"";position:absolute;left:calc(var(--s)*-2.6);top:calc(var(--s)*-.6);width:calc(var(--s)*6);height:calc(var(--s)*1.6);background:var(--pick);clip-path:polygon(0 100%,15% 0,85% 0,100% 100%,82% 55%,18% 55%)}
+.avatar[data-tool="pico-madera"]{--pick:#c99a5e}
+.avatar[data-tool="pico-oro"]{--pick:#f5c542}
+.avatar[data-tool="pico-diamante"]{--pick:#5ce1e6}
+
+/* store + sound screens */
+.bar-title{font:700 26px var(--font-display);color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.25)}
+.btn.gemb{background:var(--emerald);box-shadow:inset 0 -6px 0 var(--emerald-dark),inset 0 4px 0 rgba(255,255,255,.25)}
+.btn .gem{width:22px;height:22px}
+.btn.gemb .gem{background:#fff;box-shadow:inset -5px -5px 0 #bfeccf}
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.item{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:10px;border:0;cursor:pointer;background:#e9dfc8;box-shadow:inset 0 -5px 0 rgba(0,0,0,.18);font:600 16px/1.15 var(--font-body);color:var(--ink);text-align:left;min-width:0}
+.item[aria-pressed="true"]{outline:4px solid var(--ink);outline-offset:2px}
+.item:focus-visible{outline:4px solid var(--gold);outline-offset:2px}
+.chip{width:28px;height:28px;box-shadow:inset -4px -4px 0 rgba(0,0,0,.2)}
+.item-tag{display:flex;align-items:center;gap:4px;font:700 16px var(--font-body);font-variant-numeric:tabular-nums}
+.item-tag .gem{width:16px;height:16px}
+.item-tag.own{color:var(--emerald-dark)}
+.item-tag.using{color:var(--wood-dark)}
+.shop-act{flex:none}
+.diag{display:grid;gap:8px}
+.diag-row{display:flex;justify-content:space-between;gap:12px;font:500 16px var(--font-body);border-bottom:2px dashed #e0d4b8;padding-bottom:6px}
+.diag-row b{font-weight:700;text-align:right;min-width:0;overflow-wrap:anywhere}
+.diag-row b.ok{color:var(--emerald-dark)}
+.diag-row b.bad{color:var(--bad)}
+.tips{margin:0;padding-left:20px;display:grid;gap:8px;font:500 15px/1.4 var(--font-body)}
+
+.logo{width:min(100%,320px);height:auto;filter:drop-shadow(0 4px 0 rgba(0,0,0,.15));flex:none}
+.join{display:grid;gap:10px;width:100%;max-width:420px}
+.form-msg{margin:0;font:600 16px/1.35 var(--font-body);color:var(--wood-dark);min-height:1.35em}
+.code-box{font:700 28px var(--font-body);font-variant-numeric:tabular-nums;letter-spacing:.06em;text-align:center;padding:12px;background:#fff;box-shadow:inset 0 0 0 4px var(--emerald);user-select:text;-webkit-user-select:text}
+.note{margin:0;font:500 15px/1.4 var(--font-body)}
+/* app shell (PWA) */
+*,*::before,*::after{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font-size:14px}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <div class="cloud" style="top:40px;left:-60px;width:60px"></div>
+  <div class="cloud" style="top:110px;left:-60px;width:44px;animation-delay:-30s"></div>
+  <div class="screen" id="screen"></div>
+  <div class="ground" aria-hidden="true"></div>
+</div>
+
+<script>
+(()=>{
+// ---------- state ----------
+const DEFAULT_CHAR={name:"",skin:"#e9b98f",hair:"#4a2c17",eye:"#2f6fd6",shirt:"#2fa4c9",pants:"#3a4a9a",hat:"casco",cap:"#d8433a",tool:"none",pet:"none"};
+const STORE=[
+  {id:"vaquero",cat:"hat",name:"Sombrero vaquero",price:10,color:"#8a5a2b"},
+  {id:"corona",cat:"hat",name:"Corona",price:15,color:"#f5c542"},
+  {id:"diamante",cat:"hat",name:"Casco de diamante",price:25,color:"#5ce1e6"},
+  {id:"pico-madera",cat:"tool",name:"Pico de madera",price:5,color:"#c99a5e"},
+  {id:"pico-oro",cat:"tool",name:"Pico de oro",price:15,color:"#f5c542"},
+  {id:"pico-diamante",cat:"tool",name:"Pico de diamante",price:30,color:"#5ce1e6"},
+  {id:"gallina",cat:"pet",name:"Gallina",price:10,color:"#ffffff"},
+  {id:"cerdito",cat:"pet",name:"Cerdito",price:20,color:"#f4a6b8"}
+];
+const CATS={hat:"Sombreros",tool:"Picos",pet:"Mascotas"};
+const BASE_HATS=[["casco","Casco"],["gorra","Gorra"],["pato","Pato"],["navidad","Navidad"]];
+const OPTS={
+  skin:["#f6d2b4","#e9b98f","#c99067","#a56b43","#6e4428"],
+  hair:["#1c1c1c","#4a2c17","#8a5a2b","#e1b44a","#c4522c","#f2f2f2"],
+  eye:["#2f6fd6","#3a8a3a","#5a3a1c","#1c1c1c","#8a4fd1"],
+  shirt:["#2fa4c9","#d8433a","#3fae4a","#f2c230","#8a4fd1","#f27a2c","#ffffff","#222222"],
+  pants:["#3a4a9a","#2b2b2b","#6b4224","#3f7f26","#8a8a8a","#b03a6e"],
+  cap:["#d8433a","#2f6fd6","#3fae4a","#222222"]
+};
+let save={char:{...DEFAULT_CHAR},gems:0,level:1,owned:[]};
+const KEY="minenumbers";
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.char)save=Object.assign(save,s)}catch(e){}
+save.char={...DEFAULT_CHAR,...save.char};if(!Array.isArray(save.owned))save.owned=[];
+function hatList(){return [...BASE_HATS,...STORE.filter(i=>i.cat==="hat"&&save.owned.includes(i.id)).map(i=>[i.id,i.name]),["none","Nada"]]}
+function writeLocal(){try{localStorage.setItem(KEY,JSON.stringify(save))}catch(e){}}
+function persist(){save.updatedAt=Date.now();writeLocal();schedulePush()}
+
+// ---------- cloud sync (Supabase) ----------
+const SB_URL="https://ijprsmmbvqvroxfxnebg.supabase.co",SB_KEY="sb_publishable_DDCGbG_YemzdcwPgwRpUqg_3mFE_By1";
+const CODE_RE=/^MINA-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+let syncState={status:"idle",at:0};
+function newCode(){const A="ABCDEFGHJKMNPQRSTUVWXYZ23456789",r=crypto.getRandomValues(new Uint8Array(8));let s="";r.forEach(b=>{s+=A[b%A.length]});return "MINA-"+s.slice(0,4)+"-"+s.slice(4)}
+function normCode(raw){let c=String(raw||"").toUpperCase().replace(/[^A-Z0-9]/g,"");if(c.startsWith("MINA"))c=c.slice(4);return c.length===8?"MINA-"+c.slice(0,4)+"-"+c.slice(4):""}
+async function rpc(fn,args){const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(args)});if(!r.ok)throw new Error(await r.text());return r.json()}
+function payload(){const {code,...rest}=save;return rest}
+function adopt(remote){if(!remote||!remote.data)return false;const t=Date.parse(remote.updated_at);if(!(t>(save.updatedAt||0)+1))return false;
+  const code=save.code;save=Object.assign({char:{...DEFAULT_CHAR},gems:0,level:1,owned:[]},remote.data,{code,updatedAt:t});
+  save.char={...DEFAULT_CHAR,...save.char};if(!Array.isArray(save.owned))save.owned=[];writeLocal();return true}
+function onRemoteChange(){const gc=document.getElementById("gemCount");if(gc)gc.textContent=save.gems;if(document.getElementById("goMine"))showHome()}
+let pushT=null;
+function schedulePush(){if(!save.code)return;clearTimeout(pushT);pushT=setTimeout(pushNow,1200)}
+async function pushNow(){if(!save.code)return;if(!navigator.onLine){syncState.status="offline";return}
+  try{syncState.status="saving";const r=await rpc("mn_guardar",{p_code:save.code,p_data:payload(),p_updated_at:new Date(save.updatedAt||Date.now()).toISOString()});
+    if(adopt(r))onRemoteChange();syncState={status:"ok",at:Date.now()}}catch(e){syncState.status="error"}}
+async function pull(){if(!save.code)return;if(!navigator.onLine){syncState.status="offline";return}
+  try{const r=await rpc("mn_cargar",{p_code:save.code});
+    if(r&&adopt(r))onRemoteChange();else if(!r||Date.parse(r.updated_at)<(save.updatedAt||0)-1)await pushNow();
+    syncState={status:"ok",at:Date.now()}}catch(e){syncState.status="error"}}
+async function joinCode(raw,msg){const code=normCode(raw);
+  if(!code){msg.textContent="El código se ve así: MINA-AB12-CD34";return false}
+  if(!navigator.onLine){msg.textContent="Necesitas internet para entrar con un código.";return false}
+  msg.textContent="Buscando…";
+  try{const r=await rpc("mn_cargar",{p_code:code});if(!r){msg.textContent="No encontré ese código. Revísalo e intenta otra vez.";return false}
+    save={char:{...DEFAULT_CHAR},gems:0,level:1,owned:[],code,updatedAt:0};adopt(r);syncState={status:"ok",at:Date.now()};return true}
+  catch(e){msg.textContent="No se pudo conectar. Intenta en un momento.";return false}}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")pull()});
+window.addEventListener("online",()=>pushNow());
+
+const $=s=>document.querySelector(s);
+const screenEl=$("#screen");
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+// ---------- voice & sound ----------
+let voice=null,onVoices=null;
+function pickVoice(){const v=speechSynthesis.getVoices();voice=v.find(x=>/es[-_]MX/i.test(x.lang))||v.find(x=>/es[-_]US/i.test(x.lang))||v.find(x=>/^es/i.test(x.lang))||null;onVoices&&onVoices()}
+if("speechSynthesis" in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+function say(t,onInfo){try{
+  if(!("speechSynthesis" in window)){onInfo&&onInfo("no-api");return}
+  const go=()=>{const u=new SpeechSynthesisUtterance(t);u.lang=voice?voice.lang:"es-MX";if(voice)u.voice=voice;u.rate=.95;u.pitch=1.1;
+    let started=false;u.onstart=()=>{started=true;onInfo&&onInfo("start")};u.onerror=e=>{if(e.error!=="interrupted"&&e.error!=="canceled")onInfo&&onInfo("error:"+(e.error||"desconocido"))};
+    speechSynthesis.speak(u);if(onInfo)setTimeout(()=>{if(!started)onInfo("timeout")},3000)};
+  if(speechSynthesis.speaking||speechSynthesis.pending){speechSynthesis.cancel();setTimeout(go,80)}else go();
+}catch(e){onInfo&&onInfo("error:"+e.message)}}
+let actx=null;
+function getCtx(){if(!actx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;actx=new C()}if(actx.state==="suspended")actx.resume();return actx}
+document.addEventListener("pointerdown",()=>{try{const c=getCtx();if(c){const b=c.createBuffer(1,1,22050),s=c.createBufferSource();s.buffer=b;s.connect(c.destination);s.start(0)}}catch(e){}},{once:true});
+function beep(type){try{const ctx=getCtx();if(!ctx)return;const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);const t=ctx.currentTime;
+  if(type==="ok"){o.type="square";o.frequency.setValueAtTime(660,t);o.frequency.setValueAtTime(990,t+.08)}
+  else if(type==="break"){o.type="sawtooth";o.frequency.setValueAtTime(180,t);o.frequency.exponentialRampToValueAtTime(60,t+.15)}
+  else{o.type="triangle";o.frequency.setValueAtTime(260,t);o.frequency.setValueAtTime(200,t+.1)}
+  g.gain.setValueAtTime(.12,t);g.gain.exponentialRampToValueAtTime(.001,t+.25);o.start(t);o.stop(t+.26)}catch(e){}}
+
+const ICON={
+  back:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4h2v2h-2v2H8v2h12v4H8v2h2v2h2v2h-2v-2H8v-2H6v-2H4v-4h2V8h2V6h2z"/></svg>',
+  speak:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3zM15 8h2v8h-2zM19 5h2v14h-2z"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M10 2h4v3h2V3h2v2h2v2h-2v2h3v6h-3v2h2v2h-2v2h-2v-2h-2v3h-4v-3H8v2H6v-2H4v-2h2v-2H3V9h3V7H4V5h2V3h2v2h2zM10 10v4h4v-4z"/></svg>'
+};
+
+// ---------- avatar ----------
+const PETS={
+  gallina:`<div class="hen"><i class="b"></i><i class="h"></i><i class="c"></i><i class="k"></i><i class="e"></i><i class="l"></i></div>`,
+  cerdito:`<div class="pig"><i class="b"></i><i class="h"></i><i class="s"></i><i class="e"></i><i class="l"></i></div>`
+};
+function avatarHTML(c,size=8,extra=""){
+  const pet=PETS[c.pet]?`<div class="pet">${PETS[c.pet]}</div>`:"";
+  return `<div class="hero" style="--k:${size/8}"><div class="avatar ${extra}" data-hat="${c.hat}" data-tool="${c.tool||"none"}" style="--s:${size}px;--skin:${c.skin};--hair:${c.hair};--eye:${c.eye};--shirt:${c.shirt};--pants:${c.pants};--cap:${c.cap}">
+  <div class="av-arm l"></div><div class="av-arm r"></div><div class="av-leg l"></div><div class="av-leg r"></div><div class="av-body"></div>
+  <div class="av-head"></div><div class="av-hair"></div><div class="av-hair side" style="left:0;top:${size*2}px"></div>
+  <div class="av-eye l"></div><div class="av-eye r"></div><div class="av-mouth"></div><div class="av-hat"></div><div class="av-tool"></div></div>${pet}</div>`}
+function gemsHTML(){return `<div class="gems" aria-label="Esmeraldas"><span class="gem"></span><span id="gemCount">${save.gems}</span></div>`}
+
+// ---------- creator ----------
+function showCreator(){
+  const c={...save.char};
+  const rows=[["Piel","skin"],["Pelo","hair"],["Ojos","eye"],["Camisa","shirt"],["Pantalón","pants"]];
+  screenEl.innerHTML=`
+  <div class="bar">${save.char.name?`<button class="btn icon" id="back" aria-label="Regresar">${ICON.back}</button>`:""}<div class="spacer"></div>
+    <button class="btn wood" id="rand" style="min-height:52px;font-size:18px">Al azar</button></div>
+  <div class="preview" id="pv"></div>
+  <div class="creator">
+    <input class="name-in" id="nameIn" maxlength="14" placeholder="Tu nombre" value="${escape(c.name)}" autocomplete="off">
+    <div class="panel" style="display:grid;gap:14px">
+      ${rows.map(([lab,k])=>`<div><p class="row-label">${lab}</p><div class="swatches" data-k="${k}">${OPTS[k].map(v=>`<button class="swatch" style="background:${v}" data-v="${v}" aria-label="${lab} ${v}" aria-pressed="${c[k]===v}"></button>`).join("")}</div></div>`).join("")}
+      <div><p class="row-label">Sombrero</p><div class="swatches" data-k="hat">
+        ${hatList().map(([v,l])=>`<button class="swatch txt" data-v="${v}" aria-pressed="${c.hat===v}">${l}</button>`).join("")}</div></div>
+      <div id="capRow" ${c.hat==="gorra"?"":"hidden"}><p class="row-label">Color de gorra</p><div class="swatches" data-k="cap">${OPTS.cap.map(v=>`<button class="swatch" style="background:${v}" data-v="${v}" aria-label="Gorra ${v}" aria-pressed="${c.cap===v}"></button>`).join("")}</div></div>
+    </div>
+    <button class="btn" id="ready">¡Listo!</button>
+  </div>`;
+  const draw=()=>{$("#pv").innerHTML=avatarHTML(c,9)};draw();
+  screenEl.querySelectorAll(".swatches").forEach(g=>g.addEventListener("click",e=>{
+    const b=e.target.closest(".swatch");if(!b)return;const k=g.dataset.k;c[k]=b.dataset.v;
+    g.querySelectorAll(".swatch").forEach(x=>x.setAttribute("aria-pressed",x===b));
+    if(k==="hat")$("#capRow").hidden=c.hat!=="gorra";beep("ok");draw()}));
+  $("#nameIn").addEventListener("input",e=>{c.name=e.target.value.trim()});
+  $("#rand").onclick=()=>{for(const k of ["skin","hair","eye","shirt","pants","cap"])c[k]=OPTS[k][rnd(0,OPTS[k].length-1)];c.hat=["casco","gorra","pato","navidad","none"][rnd(0,4)];
+    screenEl.querySelectorAll(".swatches").forEach(g=>g.querySelectorAll(".swatch").forEach(x=>x.setAttribute("aria-pressed",x.dataset.v===c[g.dataset.k])));$("#capRow").hidden=c.hat!=="gorra";beep("ok");draw()};
+  if($("#back"))$("#back").onclick=showHome;
+  $("#ready").onclick=()=>{if(!c.name){$("#nameIn").focus();say("¿Cómo te llamas? Escribe tu nombre");return}
+    save.char=c;persist();say(`¡Hola ${c.name}! Vamos a jugar`);showHome()};
+  if(!c.name)setTimeout(()=>say("¡Crea a tu minero! Escoge los colores y tu nombre"),300);
+}
+
+// ---------- store ----------
+function showStore(){
+  let sel=null,trial={...save.char};
+  screenEl.innerHTML=`
+  <div class="bar"><button class="btn icon" id="back" aria-label="Regresar">${ICON.back}</button><span class="bar-title">Tienda</span><div class="spacer"></div>${gemsHTML()}</div>
+  <div class="preview" id="pv"></div>
+  <p class="tip" id="shopTip">Toca algo para probártelo</p>
+  <button class="btn shop-act" id="act" hidden></button>
+  <div class="creator">
+    <div class="panel" style="display:grid;gap:14px">
+      ${Object.entries(CATS).map(([cat,label])=>`<div><p class="row-label">${label}</p><div class="shop-grid">${STORE.filter(i=>i.cat===cat).map(i=>`<button class="item" data-id="${i.id}" aria-pressed="false"><span class="chip" style="background:${i.color}"></span><span>${i.name}</span><span class="item-tag" id="tag-${i.id}"></span></button>`).join("")}</div></div>`).join("")}
+    </div>
+  </div>`;
+  const draw=()=>{$("#pv").innerHTML=avatarHTML(trial,8)};
+  const tags=()=>STORE.forEach(i=>{const t=$("#tag-"+i.id),own=save.owned.includes(i.id),using=save.char[i.cat]===i.id;
+    t.innerHTML=using?"Usando":own?"Tuyo":`<span class="gem"></span>${i.price}`;t.className="item-tag"+(using?" using":own?" own":"")});
+  const act=()=>{const b=$("#act");$("#shopTip").hidden=!!sel;b.hidden=!sel;if(!sel)return;
+    const own=save.owned.includes(sel.id),using=save.char[sel.cat]===sel.id;b.className="btn shop-act";
+    if(using){b.textContent="Quitar";b.classList.add("wood")}
+    else if(own){b.textContent="Usar"}
+    else if(save.gems>=sel.price){b.innerHTML=`Comprar <span class="gem"></span> ${sel.price}`;b.classList.add("gemb")}
+    else{b.textContent=`Te faltan ${sel.price-save.gems}`;b.classList.add("stone")}};
+  draw();tags();act();
+  screenEl.querySelectorAll(".item").forEach(btn=>btn.onclick=()=>{
+    sel=STORE.find(i=>i.id===btn.dataset.id);trial={...save.char,[sel.cat]:sel.id};
+    screenEl.querySelectorAll(".item").forEach(x=>x.setAttribute("aria-pressed",x===btn));
+    beep("ok");draw();act();
+    const own=save.owned.includes(sel.id);
+    say(own?`${sel.name}. ¡Ya es tuyo!`:save.gems>=sel.price?`${sel.name}. Cuesta ${sel.price} esmeraldas`:`${sel.name}. Cuesta ${sel.price}. Te faltan ${sel.price-save.gems} esmeraldas`)});
+  $("#act").onclick=()=>{if(!sel)return;const own=save.owned.includes(sel.id),using=save.char[sel.cat]===sel.id;
+    if(using){save.char[sel.cat]="none";say("Listo, te lo quitaste")}
+    else if(own){save.char[sel.cat]=sel.id;say("¡Te queda muy bien!")}
+    else if(save.gems>=sel.price){save.gems-=sel.price;save.owned.push(sel.id);save.char[sel.cat]=sel.id;$("#gemCount").textContent=save.gems;beep("ok");say(`¡Compraste ${sel.name}!`)}
+    else{beep("no");say(`Te faltan ${sel.price-save.gems} esmeraldas. ¡Juega para ganar más!`);return}
+    persist();trial={...save.char};draw();tags();act()};
+  $("#back").onclick=showHome;
+  say("¡Bienvenido a la tienda! Toca algo para probártelo");
+}
+
+// ---------- sound check ----------
+function showSound(){
+  const wv=/; wv\)/.test(navigator.userAgent);
+  let last=null;
+  screenEl.innerHTML=`
+  <div class="bar"><button class="btn icon" id="back" aria-label="Regresar">${ICON.back}</button><span class="bar-title">Papás</span><div class="spacer"></div></div>
+  <div class="creator">
+    <div class="panel" style="display:grid;gap:14px">
+      <p class="row-label">Código familiar</p>
+      <div class="code-box" id="codeBox">${save.code||"—"}</div>
+      <p class="form-msg" id="syncMsg"></p>
+      <div class="level"><button class="btn" id="cpy">Copiar</button><button class="btn wood" id="syncNow">Sincronizar</button></div>
+      <p class="note">En otro celular abre MineNumbers, toca "Ya tengo un código" y escribe este código para seguir la misma partida.</p>
+      <button class="btn stone" id="otherCode" style="min-height:52px;font-size:18px">Usar otro código</button>
+      <div class="join" id="otherForm" hidden>
+        <input class="name-in" id="codeIn2" placeholder="MINA-AB12-CD34" autocomplete="off" autocapitalize="characters" maxlength="14" aria-label="Otro código">
+        <p class="form-msg" id="codeMsg2">La partida de este celular se cambiará por la del código.</p>
+        <button class="btn" id="codeGo2">Cambiar de partida</button>
+      </div>
+      <p class="row-label" style="margin-top:10px">Revisión de sonido</p>
+      <div class="diag" id="diag"></div>
+      <button class="btn" id="tBeep">Probar efectos</button>
+      <button class="btn wood" id="tVoice">Probar voz</button>
+      <p class="row-label" style="margin-top:6px">Qué revisar</p>
+      <ul class="tips" id="tips"></ul>
+    </div>
+  </div>`;
+  const render=()=>{
+    const hasTTS="speechSynthesis" in window,vs=hasTTS?speechSynthesis.getVoices():[],es=vs.filter(v=>/^es/i.test(v.lang));
+    const C=window.AudioContext||window.webkitAudioContext;
+    const rows=[
+      ["Efectos de sonido",!C?"No disponibles":actx?(actx.state==="running"?"Activos":"Bloqueados ("+actx.state+")"):"Sin probar",!!C&&(!actx||actx.state==="running")],
+      ["Voz del teléfono",hasTTS?"Disponible":"No disponible",hasTTS],
+      ["Voces en español",hasTTS?String(es.length):"0",es.length>0],
+      ["Voz elegida",voice?voice.name:"Ninguna",!!voice],
+      ["Abierto en",wv?"Una app":"Navegador",!wv]
+    ];
+    if(last)rows.push(["Prueba de voz",last[0],last[1]]);
+    $("#diag").innerHTML=rows.map(([a,b,ok])=>`<div class="diag-row"><span>${a}</span><b class="${ok?"ok":"bad"}">${escape(b)}</b></div>`).join("");
+    const tips=[];
+    if(!hasTTS||wv)tips.push("Abre el juego en Chrome. Dentro de otras apps la voz casi nunca funciona.");
+    if(hasTTS&&!es.length)tips.push("Instala la voz en español: en Ajustes busca \"Texto a voz\", elige el motor de Google y descarga Español (México o Estados Unidos).");
+    tips.push("Sube el volumen multimedia (no el del timbre) con los botones laterales mientras el juego está abierto.");
+    tips.push("Revisa que el teléfono no esté en modo No molestar ni conectado a unos audífonos Bluetooth.");
+    $("#tips").innerHTML=tips.map(t=>`<li>${t}</li>`).join("");
+  };
+  onVoices=render;render();
+  const syncText=()=>{const m=$("#syncMsg");if(!m)return;const s=syncState.status;
+    m.textContent=s==="ok"?"Guardado en la nube a las "+new Date(syncState.at).toLocaleTimeString("es-MX",{hour:"numeric",minute:"2-digit"}):s==="saving"?"Guardando…":s==="offline"?"Sin internet: se guarda en este celular y se sube al reconectar.":s==="error"?"No se pudo conectar con la nube. Se guarda en este celular.":"Aún sin sincronizar."};
+  syncText();const syncTimer=setInterval(()=>{if(!document.getElementById("syncMsg"))return clearInterval(syncTimer);syncText()},1000);
+  $("#cpy").onclick=()=>{const t=save.code||"";const done=()=>{$("#cpy").textContent="Copiado"};
+    try{navigator.clipboard.writeText(t).then(done,()=>{getSelection().selectAllChildren($("#codeBox"))})}catch(e){getSelection().selectAllChildren($("#codeBox"))}};
+  $("#syncNow").onclick=async()=>{syncState.status="saving";syncText();await pull();syncText()};
+  $("#otherCode").onclick=()=>{$("#otherForm").hidden=false;$("#otherCode").hidden=true;$("#codeIn2").focus()};
+  $("#codeGo2").onclick=async()=>{if(await joinCode($("#codeIn2").value,$("#codeMsg2"))){onVoices=null;save.char.name?showHome():showCreator()}};
+  $("#tBeep").onclick=()=>{beep("ok");setTimeout(()=>beep("break"),300);setTimeout(render,400)};
+  $("#tVoice").onclick=()=>{last=["Probando…",true];render();
+    say("Hola, soy tu minero. ¡Vamos a jugar!",info=>{
+      last=info==="start"?["Sí arrancó",true]:info==="timeout"?["No arrancó",false]:info==="no-api"?["No disponible",false]:["Error: "+info.slice(6),false];render()})};
+  $("#back").onclick=()=>{onVoices=null;showHome()};
+}
+
+// ---------- home ----------
+function showHome(){
+  screenEl.innerHTML=`
+  <div class="bar"><button class="btn icon" id="goSound" aria-label="Ajustes para papás">${ICON.gear}</button>
+    <button class="btn wood" id="installBtn" ${deferredPrompt?"":"hidden"} style="min-height:44px;font-size:16px;padding:8px 12px">Instalar</button><div class="spacer"></div>${gemsHTML()}</div>
+  <div class="home">
+    <img class="logo" src="logo.png" alt="MineNumbers">
+    ${avatarHTML(save.char,8,"happy")}
+    <p class="hello">¡Hola, ${escape(save.char.name)}!</p>
+    <div class="menu">
+      <button class="btn stone" id="goMine">Mina rápida</button>
+      <button class="btn" id="goFarm">Granja de sumas</button>
+      <button class="btn gemb" id="goShop"><span class="gem"></span> Tienda</button>
+      <div class="level" role="group" aria-label="Nivel">
+        <button class="btn wood" data-l="1" aria-pressed="${save.level===1}">Nivel 1</button>
+        <button class="btn wood" data-l="2" aria-pressed="${save.level===2}">Nivel 2</button>
+      </div>
+      <button class="btn wood" id="goEdit" style="min-height:52px;font-size:18px">Cambiar mi minero</button>
+    </div>
+  </div>`;
+  $("#goMine").onclick=()=>startRound("mine");
+  $("#goFarm").onclick=()=>startRound("farm");
+  $("#goEdit").onclick=showCreator;
+  $("#goShop").onclick=showStore;
+  $("#goSound").onclick=showSound;
+  $("#installBtn").onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();try{await deferredPrompt.userChoice}catch(e){}deferredPrompt=null;$("#installBtn").hidden=true};
+  screenEl.querySelectorAll(".level .btn").forEach(b=>b.onclick=()=>{save.level=+b.dataset.l;persist();
+    screenEl.querySelectorAll(".level .btn").forEach(x=>x.setAttribute("aria-pressed",x===b));beep("ok");
+    say(save.level===1?"Nivel uno: números del uno al diez":"Nivel dos: números hasta el veinte")});
+}
+function escape(s){return s.replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
+
+// ---------- round flow ----------
+const ROUNDS=5;let round=null;
+function startRound(kind){round={kind,i:0,won:0};kind==="mine"?mineQ():farmQ()}
+function gameBar(){return `<div class="bar"><button class="btn icon" id="quit" aria-label="Salir">${ICON.back}</button>
+  <button class="btn icon" id="again" aria-label="Repetir instrucción">${ICON.speak}</button><div class="spacer"></div>${gemsHTML()}</div>
+  <div class="dots">${Array.from({length:ROUNDS},(_,i)=>`<i class="${i<round.i?"done":""}"></i>`).join("")}</div>`}
+function wireBar(text){$("#quit").onclick=()=>{clearTimer();speechSynthesis&&speechSynthesis.cancel();showHome()};$("#again").onclick=()=>say(text)}
+function addGems(n,fromEl){save.gems+=n;round.won+=n;persist();const gc=$("#gemCount");if(gc)gc.textContent=save.gems;
+  if(fromEl&&!matchMedia("(prefers-reduced-motion:reduce)").matches){const r=fromEl.getBoundingClientRect(),t=$(".gems").getBoundingClientRect(),app=$("#app").getBoundingClientRect();
+    const g=document.createElement("span");g.className="gem fly-gem";g.style.left=(r.left+r.width/2-11-app.left)+"px";g.style.top=(r.top+r.height/2-11-app.top)+"px";$("#app").appendChild(g);
+    g.animate([{transform:"translate(0,0) scale(1.6)"},{transform:`translate(${t.left-r.left-r.width/2+20}px,${t.top-r.top-r.height/2+4}px) scale(1)`}],{duration:650,easing:"ease-in"}).onfinish=()=>g.remove()}}
+function next(){round.i++;if(round.i>=ROUNDS)return showReward();round.kind==="mine"?mineQ():farmQ()}
+let timer=null;function clearTimer(){if(timer){clearTimeout(timer);timer=null}}
+
+// ---------- Mina rápida ----------
+function mineQ(){
+  const max=save.level===1?10:20,count=save.level===1?4:6;
+  const target=rnd(1,max);const set=new Set([target]);while(set.size<count)set.add(rnd(1,max));
+  const nums=shuffle([...set]);const text=`¡Pica el ${target}!`;
+  screenEl.innerHTML=`${gameBar()}
+    <p class="prompt">${text}</p>
+    <div class="timebar"><i id="tb"></i></div>
+    <div class="mine-grid" style="--cols:${count===4?2:3}">${nums.map(n=>`<button class="ore" data-n="${n}" aria-label="Bloque ${n}">${n}</button>`).join("")}</div>`;
+  wireBar(text);say(text);
+  const start=performance.now(),LIMIT=6000;let done=false;
+  const tb=$("#tb");tb.animate([{transform:"scaleX(1)"},{transform:"scaleX(0)"}],{duration:LIMIT,fill:"forwards"});
+  clearTimer();timer=setTimeout(()=>{if(done)return;const t=screenEl.querySelector(`.ore[data-n="${target}"]`);t&&t.classList.add("hint");say(`Busca el ${target}`)},LIMIT);
+  screenEl.querySelectorAll(".ore").forEach(b=>b.onclick=()=>{
+    if(done)return;const n=+b.dataset.n;
+    if(n===target){done=true;clearTimer();beep("break");burst(b);b.classList.add("broken");
+      const fast=performance.now()-start<3000;addGems(fast?2:1,b);beep("ok");say(fast?"¡Súper rápido!":"¡Muy bien!");setTimeout(next,1100)}
+    else{beep("no");b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake");say(`Ese es el ${n}. Busca el ${target}`)}
+  });
+}
+function burst(el){if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;const r=el.getBoundingClientRect(),app=$("#app").getBoundingClientRect();
+  for(let i=0;i<8;i++){const c=document.createElement("span");c.className="chunk";c.style.left=(r.left+r.width/2-app.left)+"px";c.style.top=(r.top+r.height/2-app.top)+"px";$("#app").appendChild(c);
+    const a=Math.random()*Math.PI*2,d=50+Math.random()*60;c.animate([{transform:"translate(0,0)",opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d+40}px)`,opacity:0}],{duration:600,easing:"ease-out"}).onfinish=()=>c.remove()}}
+
+// ---------- Granja de sumas ----------
+const henHTML=i=>`<button class="hen" aria-label="Gallina"><i class="b"></i><i class="h"></i><i class="c"></i><i class="k"></i><i class="e"></i><i class="l"></i><i class="n"></i></button>`;
+const gall=n=>n===1?"1 gallina":`${n} gallinas`;
+function farmQ(){
+  const max=save.level===1?5:10;const a=rnd(1,max-1),b=rnd(1,max-a),sum=a+b;
+  const opts=new Set([sum]);while(opts.size<3){const d=sum+rnd(-3,3);if(d>=1&&d<=max+2)opts.add(d)}
+  const text=`${gall(a)} y ${gall(b)}. ¿Cuántas son en total?`;
+  screenEl.innerHTML=`${gameBar()}
+    <div class="farm">
+      <p class="prompt">¿Cuántas gallinas hay?</p>
+      <div class="pens"><div class="pen" id="penA">${Array.from({length:a},henHTML).join("")}</div><span class="plus">+</span><div class="pen" id="penB">${Array.from({length:b},henHTML).join("")}</div></div>
+      <p class="equation" id="eq">&nbsp;</p>
+      <p class="tip">Toca las gallinas para contarlas</p>
+      <div class="choices">${shuffle([...opts]).map(n=>`<button class="choice" data-n="${n}">${n}</button>`).join("")}</div>
+    </div>`;
+  wireBar(text);say(text);
+  let counted=0,done=false;
+  screenEl.querySelectorAll(".hen").forEach(h=>h.onclick=()=>{if(h.classList.contains("counted"))return;counted++;h.classList.add("counted");h.querySelector(".n").textContent=counted;beep("ok");say(String(counted))});
+  screenEl.querySelectorAll(".choice").forEach(c=>c.onclick=()=>{
+    if(done)return;const n=+c.dataset.n;
+    if(n===sum){done=true;$("#eq").textContent=`${a} + ${b} = ${sum}`;screenEl.querySelectorAll(".hen").forEach(h=>h.classList.add("jump"));
+      addGems(1,c);beep("ok");say(`¡Muy bien! ${a} más ${b} son ${sum}`);setTimeout(next,2200)}
+    else{beep("no");c.classList.remove("shake");void c.offsetWidth;c.classList.add("shake");say("Casi. Cuéntalas otra vez")}
+  });
+}
+
+// ---------- reward ----------
+function showReward(){
+  screenEl.innerHTML=`<div class="bar"><div class="spacer"></div>${gemsHTML()}</div>
+  <div class="reward">
+    <h1>¡Lo lograste!</h1>
+    ${avatarHTML(save.char,10,"happy")}
+    <div class="won"><span class="gem big"></span>+${round.won}</div>
+    <div class="menu"><button class="btn" id="replay">Jugar otra vez</button><button class="btn wood" id="home">Inicio</button></div>
+  </div>`;
+  say(`¡Lo lograste, ${save.char.name}! Ganaste ${round.won} esmeraldas`);
+  const k=round.kind;$("#replay").onclick=()=>startRound(k);$("#home").onclick=showHome;
+}
+
+// ---------- welcome (first run) ----------
+function showWelcome(){
+  screenEl.innerHTML=`<div class="home">
+    <img class="logo" src="logo.png" alt="MineNumbers">
+    <div class="menu" id="wMenu"><button class="btn" id="wNew">Jugador nuevo</button><button class="btn wood" id="wHave">Ya tengo un código</button></div>
+    <div class="panel join" id="wForm" hidden>
+      <label class="row-label" for="codeIn">Código familiar</label>
+      <input class="name-in" id="codeIn" placeholder="MINA-AB12-CD34" autocomplete="off" autocapitalize="characters" maxlength="14">
+      <p class="form-msg" id="codeMsg"></p>
+      <button class="btn" id="codeGo">Entrar</button>
+      <button class="btn stone" id="codeBack" style="min-height:52px;font-size:18px">Regresar</button>
+    </div></div>`;
+  $("#wNew").onclick=()=>{save.code=newCode();persist();showCreator()};
+  $("#wHave").onclick=()=>{$("#wMenu").hidden=true;$("#wForm").hidden=false;$("#codeIn").focus()};
+  $("#codeBack").onclick=showWelcome;
+  $("#codeGo").onclick=async()=>{if(await joinCode($("#codeIn").value,$("#codeMsg")))save.char.name?showHome():showCreator()};
+}
+
+// ---------- install + offline ----------
+let deferredPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;const b=document.getElementById("installBtn");if(b)b.hidden=false});
+window.addEventListener("appinstalled",()=>{deferredPrompt=null;const b=document.getElementById("installBtn");if(b)b.hidden=true});
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+
+if(!save.code&&save.char.name){save.code=newCode();persist()}
+if(!save.code)showWelcome();else{save.char.name?showHome():showCreator();pull()}
+})();
+</script>
+
+</body>
+</html>
