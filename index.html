@@ -217,6 +217,18 @@ h1{font:700 clamp(30px,9vw,44px)/1 var(--font-display);color:#fff;text-shadow:3p
 .ground{display:flex;justify-content:center;align-items:flex-start;padding-top:24px}
 .ver{display:none;font:600 13px var(--font-body);color:#fff;letter-spacing:.04em;text-shadow:1px 1px 0 rgba(0,0,0,.45)}
 .app:has(#goMine) .ver{display:block}
+.ic{width:56px;height:56px;display:flex;justify-content:center;align-items:flex-end;overflow:hidden;background:rgba(255,255,255,.6);box-shadow:inset 0 -3px 0 rgba(0,0,0,.08)}
+.ic.ic-hat{align-items:flex-start;padding-top:2px}
+.pick-ic{position:relative;width:44px;height:50px}
+.pick-ic i{position:absolute;left:19px;top:10px;width:6px;height:38px;background:#8a6334;transform:rotate(30deg)}
+.pick-ic i::after{content:"";position:absolute;left:-17px;top:-4px;width:40px;height:11px;background:var(--pick);clip-path:polygon(0 100%,15% 0,85% 0,100% 100%,82% 55%,18% 55%)}
+.pick-ic[data-tool="pico-madera"]{--pick:#c99a5e}
+.pick-ic[data-tool="pico-oro"]{--pick:#f5c542}
+.pick-ic[data-tool="pico-diamante"]{--pick:#5ce1e6}
+.item-tag svg,.btn svg.lk{width:16px;height:16px;fill:currentColor;flex:none}
+.btn svg.lk{width:20px;height:20px}
+.btn small{font-size:14px;font-weight:600;opacity:.9;font-variant-numeric:tabular-nums}
+.level .btn.locked{opacity:1;background:var(--stone);box-shadow:inset 0 -6px 0 var(--stone-dark),inset 0 4px 0 rgba(255,255,255,.25);gap:6px}
 /* app shell (PWA) */
 *,*::before,*::after{box-sizing:border-box}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -240,19 +252,23 @@ img{max-width:100%}
 const APP_VERSION="1.0",APP_BUILD="Noviembre 2026";
 document.getElementById("ver").textContent=`MineNumbers - V.${APP_VERSION} - ${APP_BUILD}`;
 // ---------- state ----------
-const DEFAULT_CHAR={name:"",skin:"#e9b98f",hair:"#4a2c17",eye:"#2f6fd6",shirt:"#2fa4c9",pants:"#3a4a9a",hat:"casco",cap:"#d8433a",tool:"none",pet:"none"};
+const DEFAULT_CHAR={name:"",skin:"#e9b98f",hair:"#4a2c17",eye:"#2f6fd6",shirt:"#2fa4c9",pants:"#3a4a9a",hat:"none",cap:"#d8433a",tool:"none",pet:"none"};
 const STORE=[
-  {id:"vaquero",cat:"hat",name:"Sombrero vaquero",price:10,color:"#8a5a2b"},
-  {id:"corona",cat:"hat",name:"Corona",price:15,color:"#f5c542"},
-  {id:"diamante",cat:"hat",name:"Casco de diamante",price:25,color:"#5ce1e6"},
-  {id:"pico-madera",cat:"tool",name:"Pico de madera",price:5,color:"#c99a5e"},
-  {id:"pico-oro",cat:"tool",name:"Pico de oro",price:15,color:"#f5c542"},
-  {id:"pico-diamante",cat:"tool",name:"Pico de diamante",price:30,color:"#5ce1e6"},
-  {id:"gallina",cat:"pet",name:"Gallina",price:10,color:"#ffffff"},
-  {id:"cerdito",cat:"pet",name:"Cerdito",price:20,color:"#f4a6b8"}
+  {id:"casco",cat:"hat",name:"Casco de minero",price:8},
+  {id:"gorra",cat:"hat",name:"Gorra",price:8},
+  {id:"pato",cat:"hat",name:"Pato",price:12},
+  {id:"navidad",cat:"hat",name:"Árbol de Navidad",price:12},
+  {id:"vaquero",cat:"hat",name:"Sombrero vaquero",price:15},
+  {id:"corona",cat:"hat",name:"Corona",price:23},
+  {id:"diamante",cat:"hat",name:"Casco de diamante",price:38},
+  {id:"pico-madera",cat:"tool",name:"Pico de madera",price:8},
+  {id:"pico-oro",cat:"tool",name:"Pico de oro",price:23},
+  {id:"pico-diamante",cat:"tool",name:"Pico de diamante",price:45},
+  {id:"gallina",cat:"pet",name:"Gallina",price:15},
+  {id:"cerdito",cat:"pet",name:"Cerdito",price:30}
 ];
+const L2_GOAL=100;
 const CATS={hat:"Sombreros",tool:"Picos",pet:"Mascotas"};
-const BASE_HATS=[["casco","Casco"],["gorra","Gorra"],["pato","Pato"],["navidad","Navidad"]];
 const OPTS={
   skin:["#f6d2b4","#e9b98f","#c99067","#a56b43","#6e4428"],
   hair:["#1c1c1c","#4a2c17","#8a5a2b","#e1b44a","#c4522c","#f2f2f2"],
@@ -264,8 +280,13 @@ const OPTS={
 let save={char:{...DEFAULT_CHAR},gems:0,level:1,owned:[]};
 const KEY="minenumbers";
 try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.char)save=Object.assign(save,s)}catch(e){}
-save.char={...DEFAULT_CHAR,...save.char};if(!Array.isArray(save.owned))save.owned=[];
-function hatList(){return [...BASE_HATS,...STORE.filter(i=>i.cat==="hat"&&save.owned.includes(i.id)).map(i=>[i.id,i.name]),["none","Nada"]]}
+function migrate(){save.char={...DEFAULT_CHAR,...save.char};if(!Array.isArray(save.owned))save.owned=[];
+  if(typeof save.earned!=="number")save.earned=save.gems+save.owned.reduce((t,id)=>t+((STORE.find(i=>i.id===id)||{}).price||0),0);
+  const h=save.char.hat;if(h!=="none"&&!save.owned.includes(h))save.owned.push(h);
+  if(save.earned<L2_GOAL)save.level=1}
+migrate();
+const l2Open=()=>save.earned>=L2_GOAL;
+function hatList(){return [...STORE.filter(i=>i.cat==="hat"&&save.owned.includes(i.id)).map(i=>[i.id,i.name]),["none","Nada"]]}
 function writeLocal(){try{localStorage.setItem(KEY,JSON.stringify(save))}catch(e){}}
 function persist(){save.updatedAt=Date.now();writeLocal();schedulePush()}
 
@@ -279,7 +300,7 @@ async function rpc(fn,args){const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{m
 function payload(){const {code,...rest}=save;return rest}
 function adopt(remote){if(!remote||!remote.data)return false;const t=Date.parse(remote.updated_at);if(!(t>(save.updatedAt||0)+1))return false;
   const code=save.code;save=Object.assign({char:{...DEFAULT_CHAR},gems:0,level:1,owned:[]},remote.data,{code,updatedAt:t});
-  save.char={...DEFAULT_CHAR,...save.char};if(!Array.isArray(save.owned))save.owned=[];writeLocal();return true}
+  migrate();writeLocal();return true}
 function onRemoteChange(){const gc=document.getElementById("gemCount");if(gc)gc.textContent=save.gems;if(document.getElementById("goMine"))showHome()}
 let pushT=null;
 function schedulePush(){if(!save.code)return;clearTimeout(pushT);pushT=setTimeout(pushNow,1200)}
@@ -328,6 +349,7 @@ function beep(type){try{const ctx=getCtx();if(!ctx)return;const o=ctx.createOsci
 const ICON={
   back:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4h2v2h-2v2H8v2h12v4H8v2h2v2h2v2h-2v-2H8v-2H6v-2H4v-4h2V8h2V6h2z"/></svg>',
   speak:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3zM15 8h2v8h-2zM19 5h2v14h-2z"/></svg>',
+  lock:'<svg class="lk" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M7 3h10v7h-2V5H9v5H7zM4 10h16v12H4zM11 14h2v4h-2z"/></svg>',
   gear:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M10 2h4v3h2V3h2v2h2v2h-2v2h3v6h-3v2h2v2h-2v2h-2v-2h-2v3h-4v-3H8v2H6v-2H4v-2h2v-2H3V9h3V7H4V5h2V3h2v2h2zM10 10v4h4v-4z"/></svg>'
 };
 
@@ -342,6 +364,10 @@ function avatarHTML(c,size=8,extra=""){
   <div class="av-arm l"></div><div class="av-arm r"></div><div class="av-leg l"></div><div class="av-leg r"></div><div class="av-body"></div>
   <div class="av-head"></div><div class="av-hair"></div><div class="av-hair side" style="left:0;top:${size*2}px"></div>
   <div class="av-eye l"></div><div class="av-eye r"></div><div class="av-mouth"></div><div class="av-hat"></div><div class="av-tool"></div></div>${pet}</div>`}
+function itemIcon(i){
+  if(i.cat==="hat")return `<span class="ic ic-hat">${avatarHTML({...save.char,hat:i.id,tool:"none",pet:"none"},4)}</span>`;
+  if(i.cat==="tool")return `<span class="ic"><span class="pick-ic" data-tool="${i.id}"><i></i></span></span>`;
+  return `<span class="ic"><span class="pet" style="--k:1">${PETS[i.id]||""}</span></span>`}
 function gemsHTML(){return `<div class="gems" aria-label="Esmeraldas"><span class="gem"></span><span id="gemCount">${save.gems}</span></div>`}
 
 // ---------- creator ----------
@@ -356,8 +382,8 @@ function showCreator(){
     <input class="name-in" id="nameIn" maxlength="14" placeholder="Tu nombre" value="${escape(c.name)}" autocomplete="off">
     <div class="panel" style="display:grid;gap:14px">
       ${rows.map(([lab,k])=>`<div><p class="row-label">${lab}</p><div class="swatches" data-k="${k}">${OPTS[k].map(v=>`<button class="swatch" style="background:${v}" data-v="${v}" aria-label="${lab} ${v}" aria-pressed="${c[k]===v}"></button>`).join("")}</div></div>`).join("")}
-      <div><p class="row-label">Sombrero</p><div class="swatches" data-k="hat">
-        ${hatList().map(([v,l])=>`<button class="swatch txt" data-v="${v}" aria-pressed="${c.hat===v}">${l}</button>`).join("")}</div></div>
+      ${hatList().length>1?`<div><p class="row-label">Sombrero</p><div class="swatches" data-k="hat">
+        ${hatList().map(([v,l])=>`<button class="swatch txt" data-v="${v}" aria-pressed="${c.hat===v}">${l}</button>`).join("")}</div></div>`:""}
       <div id="capRow" ${c.hat==="gorra"?"":"hidden"}><p class="row-label">Color de gorra</p><div class="swatches" data-k="cap">${OPTS.cap.map(v=>`<button class="swatch" style="background:${v}" data-v="${v}" aria-label="Gorra ${v}" aria-pressed="${c.cap===v}"></button>`).join("")}</div></div>
     </div>
     <button class="btn" id="ready">¡Listo!</button>
@@ -368,7 +394,7 @@ function showCreator(){
     g.querySelectorAll(".swatch").forEach(x=>x.setAttribute("aria-pressed",x===b));
     if(k==="hat")$("#capRow").hidden=c.hat!=="gorra";beep("ok");draw()}));
   $("#nameIn").addEventListener("input",e=>{c.name=e.target.value.trim()});
-  $("#rand").onclick=()=>{for(const k of ["skin","hair","eye","shirt","pants","cap"])c[k]=OPTS[k][rnd(0,OPTS[k].length-1)];c.hat=["casco","gorra","pato","navidad","none"][rnd(0,4)];
+  $("#rand").onclick=()=>{for(const k of ["skin","hair","eye","shirt","pants","cap"])c[k]=OPTS[k][rnd(0,OPTS[k].length-1)];
     screenEl.querySelectorAll(".swatches").forEach(g=>g.querySelectorAll(".swatch").forEach(x=>x.setAttribute("aria-pressed",x.dataset.v===c[g.dataset.k])));$("#capRow").hidden=c.hat!=="gorra";beep("ok");draw()};
   if($("#back"))$("#back").onclick=showHome;
   $("#ready").onclick=()=>{if(!c.name){$("#nameIn").focus();say("¿Cómo te llamas? Escribe tu nombre");return}
@@ -386,12 +412,12 @@ function showStore(){
   <button class="btn shop-act" id="act" hidden></button>
   <div class="creator">
     <div class="panel" style="display:grid;gap:14px">
-      ${Object.entries(CATS).map(([cat,label])=>`<div><p class="row-label">${label}</p><div class="shop-grid">${STORE.filter(i=>i.cat===cat).map(i=>`<button class="item" data-id="${i.id}" aria-pressed="false"><span class="chip" style="background:${i.color}"></span><span>${i.name}</span><span class="item-tag" id="tag-${i.id}"></span></button>`).join("")}</div></div>`).join("")}
+      ${Object.entries(CATS).map(([cat,label])=>`<div><p class="row-label">${label}</p><div class="shop-grid">${STORE.filter(i=>i.cat===cat).map(i=>`<button class="item" data-id="${i.id}" aria-pressed="false">${itemIcon(i)}<span>${i.name}</span><span class="item-tag" id="tag-${i.id}"></span></button>`).join("")}</div></div>`).join("")}
     </div>
   </div>`;
   const draw=()=>{$("#pv").innerHTML=avatarHTML(trial,8)};
   const tags=()=>STORE.forEach(i=>{const t=$("#tag-"+i.id),own=save.owned.includes(i.id),using=save.char[i.cat]===i.id;
-    t.innerHTML=using?"Usando":own?"Tuyo":`<span class="gem"></span>${i.price}`;t.className="item-tag"+(using?" using":own?" own":"")});
+    t.innerHTML=using?"Usando":own?"Tuyo":`${ICON.lock}<span class="gem"></span>${i.price}`;t.className="item-tag"+(using?" using":own?" own":"")});
   const act=()=>{const b=$("#act");$("#shopTip").hidden=!!sel;b.hidden=!sel;if(!sel)return;
     const own=save.owned.includes(sel.id),using=save.char[sel.cat]===sel.id;b.className="btn shop-act";
     if(using){b.textContent="Quitar";b.classList.add("wood")}
@@ -492,7 +518,7 @@ function showHome(){
       <button class="btn gemb" id="goShop"><span class="gem"></span> Tienda</button>
       <div class="level" role="group" aria-label="Nivel">
         <button class="btn wood" data-l="1" aria-pressed="${save.level===1}">Nivel 1</button>
-        <button class="btn wood" data-l="2" aria-pressed="${save.level===2}">Nivel 2</button>
+        <button class="btn wood${l2Open()?"":" locked"}" data-l="2" aria-pressed="${save.level===2}">${l2Open()?"Nivel 2":`${ICON.lock} Nivel 2 <small>${Math.min(save.earned,L2_GOAL)}/${L2_GOAL}</small>`}</button>
       </div>
       <button class="btn wood" id="goEdit" style="min-height:52px;font-size:18px">Cambiar mi minero</button>
     </div>
@@ -503,7 +529,9 @@ function showHome(){
   $("#goShop").onclick=showStore;
   $("#goSound").onclick=showSound;
   $("#installBtn").onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();try{await deferredPrompt.userChoice}catch(e){}deferredPrompt=null;$("#installBtn").hidden=true};
-  screenEl.querySelectorAll(".level .btn").forEach(b=>b.onclick=()=>{save.level=+b.dataset.l;persist();
+  screenEl.querySelectorAll(".level .btn").forEach(b=>b.onclick=()=>{
+    if(b.dataset.l==="2"&&!l2Open()){beep("no");say(`Junta ${L2_GOAL} esmeraldas para abrir el nivel 2. Llevas ${save.earned}`);return}
+    save.level=+b.dataset.l;persist();
     screenEl.querySelectorAll(".level .btn").forEach(x=>x.setAttribute("aria-pressed",x===b));beep("ok");
     say(save.level===1?"Nivel uno: números del uno al diez":"Nivel dos: números hasta el veinte")});
 }
@@ -516,7 +544,7 @@ function gameBar(){return `<div class="bar"><button class="btn icon" id="quit" a
   <button class="btn icon" id="again" aria-label="Repetir instrucción">${ICON.speak}</button><div class="spacer"></div>${gemsHTML()}</div>
   <div class="dots">${Array.from({length:ROUNDS},(_,i)=>`<i class="${i<round.i?"done":""}"></i>`).join("")}</div>`}
 function wireBar(text){$("#quit").onclick=()=>{clearTimer();speechSynthesis&&speechSynthesis.cancel();showHome()};$("#again").onclick=()=>say(text)}
-function addGems(n,fromEl){save.gems+=n;round.won+=n;persist();const gc=$("#gemCount");if(gc)gc.textContent=save.gems;
+function addGems(n,fromEl){save.gems+=n;save.earned=(save.earned||0)+n;round.won+=n;persist();const gc=$("#gemCount");if(gc)gc.textContent=save.gems;
   if(fromEl&&!matchMedia("(prefers-reduced-motion:reduce)").matches){const r=fromEl.getBoundingClientRect(),t=$(".gems").getBoundingClientRect(),app=$("#app").getBoundingClientRect();
     const g=document.createElement("span");g.className="gem fly-gem";g.style.left=(r.left+r.width/2-11-app.left)+"px";g.style.top=(r.top+r.height/2-11-app.top)+"px";$("#app").appendChild(g);
     g.animate([{transform:"translate(0,0) scale(1.6)"},{transform:`translate(${t.left-r.left-r.width/2+20}px,${t.top-r.top-r.height/2+4}px) scale(1)`}],{duration:650,easing:"ease-in"}).onfinish=()=>g.remove()}}
@@ -582,7 +610,10 @@ function showReward(){
     <div class="won"><span class="gem big"></span>+${round.won}</div>
     <div class="menu"><button class="btn" id="replay">Jugar otra vez</button><button class="btn wood" id="home">Inicio</button></div>
   </div>`;
-  say(`¡Lo lograste, ${save.char.name}! Ganaste ${round.won} esmeraldas`);
+  let msg=`¡Lo lograste, ${save.char.name}! Ganaste ${round.won} esmeraldas`;
+  if(l2Open()&&!save.l2Seen){save.l2Seen=true;persist();msg+=". ¡Y abriste el nivel 2!";
+    $(".reward .won").insertAdjacentHTML("afterend",`<p class="hello">¡Nivel 2 desbloqueado!</p>`)}
+  say(msg);
   const k=round.kind;$("#replay").onclick=()=>startRound(k);$("#home").onclick=showHome;
 }
 
