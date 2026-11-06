@@ -214,6 +214,9 @@ h1{font:700 clamp(30px,9vw,44px)/1 var(--font-display);color:#fff;text-shadow:3p
 .form-msg{margin:0;font:600 16px/1.35 var(--font-body);color:var(--wood-dark);min-height:1.35em}
 .code-box{font:700 28px var(--font-body);font-variant-numeric:tabular-nums;letter-spacing:.06em;text-align:center;padding:12px;background:#fff;box-shadow:inset 0 0 0 4px var(--emerald);user-select:text;-webkit-user-select:text}
 .note{margin:0;font:500 15px/1.4 var(--font-body)}
+.ground{display:flex;justify-content:center;align-items:flex-start;padding-top:24px}
+.ver{display:none;font:600 13px var(--font-body);color:#fff;letter-spacing:.04em;text-shadow:1px 1px 0 rgba(0,0,0,.45)}
+.app:has(#goMine) .ver{display:block}
 /* app shell (PWA) */
 *,*::before,*::after{box-sizing:border-box}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -228,11 +231,14 @@ img{max-width:100%}
   <div class="cloud" style="top:40px;left:-60px;width:60px"></div>
   <div class="cloud" style="top:110px;left:-60px;width:44px;animation-delay:-30s"></div>
   <div class="screen" id="screen"></div>
-  <div class="ground" aria-hidden="true"></div>
+  <div class="ground"><span class="ver" id="ver"></span></div>
 </div>
 
 <script>
 (()=>{
+// ---------- version (actualizar en cada publicación) ----------
+const APP_VERSION="1.0",APP_BUILD="Noviembre 2026";
+document.getElementById("ver").textContent=`MineNumbers - V.${APP_VERSION} - ${APP_BUILD}`;
 // ---------- state ----------
 const DEFAULT_CHAR={name:"",skin:"#e9b98f",hair:"#4a2c17",eye:"#2f6fd6",shirt:"#2fa4c9",pants:"#3a4a9a",hat:"casco",cap:"#d8433a",tool:"none",pet:"none"};
 const STORE=[
