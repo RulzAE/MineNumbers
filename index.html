@@ -229,6 +229,14 @@ h1{font:700 clamp(30px,9vw,44px)/1 var(--font-display);color:#fff;text-shadow:3p
 .btn svg.lk{width:20px;height:20px}
 .btn small{font-size:14px;font-weight:600;opacity:.9;font-variant-numeric:tabular-nums}
 .level .btn.locked{opacity:1;background:var(--stone);box-shadow:inset 0 -6px 0 var(--stone-dark),inset 0 4px 0 rgba(255,255,255,.25);gap:6px}
+/* espada (diseño propio: hoja plateada, guarda dorada con gema roja) */
+.avatar[data-tool="espada"] .av-tool{top:calc(var(--s)*9.6);height:calc(var(--s)*2.6);background:#6b4224;box-shadow:inset 0 calc(var(--s)*-.6) 0 #f5c542}
+.avatar[data-tool="espada"] .av-tool::before{content:"";position:absolute;left:calc(var(--s)*-.2);top:calc(var(--s)*-6.8);width:calc(var(--s)*1.3);height:calc(var(--s)*6.4);background:linear-gradient(90deg,#f4f7f9 0 50%,#b7c3cc 50%);clip-path:polygon(0 14%,50% 0,100% 14%,100% 100%,0 100%)}
+.avatar[data-tool="espada"] .av-tool::after{left:calc(var(--s)*-1.25);top:calc(var(--s)*-.75);width:calc(var(--s)*3.4);height:calc(var(--s)*.9);background:radial-gradient(circle,#e2574c 0 calc(var(--s)*.32),transparent calc(var(--s)*.32 + .5px)),#f5c542;clip-path:none}
+.sword-ic{position:relative;width:44px;height:50px}
+.sword-ic i{position:absolute;left:20px;top:34px;width:6px;height:14px;background:#6b4224;box-shadow:inset 0 -3px 0 #f5c542;transform:rotate(30deg);transform-origin:50% -150%}
+.sword-ic i::before{content:"";position:absolute;left:-1px;top:-30px;width:8px;height:28px;background:linear-gradient(90deg,#f4f7f9 0 50%,#b7c3cc 50%);clip-path:polygon(0 14%,50% 0,100% 14%,100% 100%,0 100%)}
+.sword-ic i::after{content:"";position:absolute;left:-7px;top:-4px;width:20px;height:5px;background:radial-gradient(circle,#e2574c 0 2px,transparent 2.5px),#f5c542}
 /* app shell (PWA) */
 *,*::before,*::after{box-sizing:border-box}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -254,21 +262,21 @@ document.getElementById("ver").textContent=`MineNumbers - V.${APP_VERSION} - ${A
 // ---------- state ----------
 const DEFAULT_CHAR={name:"",skin:"#e9b98f",hair:"#4a2c17",eye:"#2f6fd6",shirt:"#2fa4c9",pants:"#3a4a9a",hat:"none",cap:"#d8433a",tool:"none",pet:"none"};
 const STORE=[
-  {id:"casco",cat:"hat",name:"Casco de minero",price:8},
-  {id:"gorra",cat:"hat",name:"Gorra",price:8},
-  {id:"pato",cat:"hat",name:"Pato",price:12},
-  {id:"navidad",cat:"hat",name:"Árbol de Navidad",price:12},
-  {id:"vaquero",cat:"hat",name:"Sombrero vaquero",price:15},
-  {id:"corona",cat:"hat",name:"Corona",price:23},
-  {id:"diamante",cat:"hat",name:"Casco de diamante",price:38},
-  {id:"pico-madera",cat:"tool",name:"Pico de madera",price:8},
-  {id:"pico-oro",cat:"tool",name:"Pico de oro",price:23},
-  {id:"pico-diamante",cat:"tool",name:"Pico de diamante",price:45},
-  {id:"gallina",cat:"pet",name:"Gallina",price:15},
-  {id:"cerdito",cat:"pet",name:"Cerdito",price:30}
+  {id:"casco",cat:"hat",name:"Casco de minero",price:20},
+  {id:"gorra",cat:"hat",name:"Gorra",price:20},
+  {id:"pato",cat:"hat",name:"Pato",price:25},
+  {id:"navidad",cat:"hat",name:"Árbol de Navidad",price:24},
+  {id:"vaquero",cat:"hat",name:"Sombrero vaquero",price:25},
+  {id:"corona",cat:"hat",name:"Corona",price:30},
+  {id:"diamante",cat:"hat",name:"Casco de diamante",price:30},
+  {id:"pico-madera",cat:"tool",name:"Pico de madera",price:20},
+  {id:"pico-oro",cat:"tool",name:"Pico de oro",price:20},
+  {id:"espada",cat:"tool",name:"Espada",price:30},
+  {id:"gallina",cat:"pet",name:"Gallina",price:50},
+  {id:"cerdito",cat:"pet",name:"Cerdito",price:50}
 ];
 const L2_GOAL=100;
-const CATS={hat:"Sombreros",tool:"Picos",pet:"Mascotas"};
+const CATS={hat:"Sombreros",tool:"En la mano",pet:"Mascotas"};
 const OPTS={
   skin:["#f6d2b4","#e9b98f","#c99067","#a56b43","#6e4428"],
   hair:["#1c1c1c","#4a2c17","#8a5a2b","#e1b44a","#c4522c","#f2f2f2"],
@@ -366,6 +374,7 @@ function avatarHTML(c,size=8,extra=""){
   <div class="av-eye l"></div><div class="av-eye r"></div><div class="av-mouth"></div><div class="av-hat"></div><div class="av-tool"></div></div>${pet}</div>`}
 function itemIcon(i){
   if(i.cat==="hat")return `<span class="ic ic-hat">${avatarHTML({...save.char,hat:i.id,tool:"none",pet:"none"},4)}</span>`;
+  if(i.id==="espada")return `<span class="ic"><span class="sword-ic"><i></i></span></span>`;
   if(i.cat==="tool")return `<span class="ic"><span class="pick-ic" data-tool="${i.id}"><i></i></span></span>`;
   return `<span class="ic"><span class="pet" style="--k:1">${PETS[i.id]||""}</span></span>`}
 function gemsHTML(){return `<div class="gems" aria-label="Esmeraldas"><span class="gem"></span><span id="gemCount">${save.gems}</span></div>`}
