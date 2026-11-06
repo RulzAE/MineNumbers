@@ -260,6 +260,8 @@ h1{font:700 clamp(30px,9vw,44px)/1 var(--font-display);color:#fff;text-shadow:3p
 .cow .s{left:34px;top:11px;width:10px;height:7px;background:#f4a6b8}
 .cow .e{left:36px;top:6px;width:3px;height:3px;background:#222}
 .cow .l{left:4px;top:32px;width:5px;height:8px;background:#222;box-shadow:20px 0 #222}
+.btn.danger{background:var(--bad);box-shadow:inset 0 -6px 0 #a83a31,inset 0 4px 0 rgba(255,255,255,.2)}
+.confirm{display:grid;gap:10px;padding:12px;background:#fdecea;box-shadow:inset 0 0 0 3px var(--bad)}
 /* app shell (PWA) */
 *,*::before,*::after{box-sizing:border-box}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -492,6 +494,12 @@ function showSound(){
         <p class="form-msg" id="codeMsg2">La partida de este celular se cambiará por la del código.</p>
         <button class="btn" id="codeGo2">Cambiar de partida</button>
       </div>
+      <p class="row-label" style="margin-top:10px">Reiniciar partida</p>
+      <button class="btn danger" id="resetBtn" style="min-height:52px;font-size:18px">Reiniciar partida</button>
+      <div class="confirm" id="resetConfirm" hidden>
+        <p class="note"><b>¿Seguro?</b> Se borran el minero, las esmeraldas, las compras y el avance al nivel 2, en este y en todos los celulares con este código. No se puede deshacer.</p>
+        <div class="level"><button class="btn danger" id="resetYes">Sí, reiniciar</button><button class="btn wood" id="resetNo">Cancelar</button></div>
+      </div>
       <p class="row-label" style="margin-top:10px">Revisión de sonido</p>
       <div class="diag" id="diag"></div>
       <button class="btn" id="tBeep">Probar efectos</button>
@@ -528,6 +536,10 @@ function showSound(){
   $("#syncNow").onclick=async()=>{syncState.status="saving";syncText();await pull();syncText()};
   $("#otherCode").onclick=()=>{$("#otherForm").hidden=false;$("#otherCode").hidden=true;$("#codeIn2").focus()};
   $("#codeGo2").onclick=async()=>{if(await joinCode($("#codeIn2").value,$("#codeMsg2"))){onVoices=null;save.char.name?showHome():showCreator()}};
+  $("#resetBtn").onclick=()=>{$("#resetBtn").hidden=true;$("#resetConfirm").hidden=false};
+  $("#resetNo").onclick=()=>{$("#resetConfirm").hidden=true;$("#resetBtn").hidden=false};
+  $("#resetYes").onclick=()=>{const code=save.code;save={char:{...DEFAULT_CHAR},gems:0,level:1,owned:[],earned:0,code};
+    persist();pushNow();onVoices=null;showCreator()};
   $("#tBeep").onclick=()=>{beep("ok");setTimeout(()=>beep("break"),300);setTimeout(render,400)};
   $("#tVoice").onclick=()=>{last=["Probando…",true];render();
     say("Hola, soy tu minero. ¡Vamos a jugar!",info=>{
