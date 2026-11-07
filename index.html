@@ -330,6 +330,10 @@ h1{font:700 clamp(30px,9vw,44px)/1 var(--font-display);color:#fff;text-shadow:3p
 .shape.rectangulo{width:82%;height:46%}
 .shape.rombo{width:60%;height:80%;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
 .row-fig{width:72px;flex:none;box-shadow:inset 0 0 0 3px #e0d4b8}
+.lvl-row.two{grid-template-columns:repeat(2,1fr)}
+.fig-demo{display:flex;justify-content:center;gap:12px}
+.fig-demo .fig{width:76px;cursor:default}
+.three-fig .fig:last-child{grid-column:1 / -1;width:50%;justify-self:center}
 /* app shell (PWA) */
 *,*::before,*::after{box-sizing:border-box}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -390,7 +394,7 @@ const l2Open=()=>save.earned>=L2_GOAL;
 function hatList(){return [...STORE.filter(i=>i.cat==="hat"&&save.owned.includes(i.id)).map(i=>[i.id,i.name]),["none","Nada"]]}
 // ajustes de este celular (no se sincronizan)
 const SET_KEY="minenumbers-ajustes";
-let settings={sfx:true,voice:true,rest:true,tex:"jardin",lvl:1,animal:"gallina",flvl:1};
+let settings={sfx:true,voice:true,rest:true,tex:"jardin",lvl:1,animal:"gallina",flvl:1,glvl:1};
 try{Object.assign(settings,JSON.parse(localStorage.getItem(SET_KEY)||"{}"))}catch(e){}
 function saveSettings(){try{localStorage.setItem(SET_KEY,JSON.stringify(settings))}catch(e){}}
 const LEVELS=[{n:1,max:10,goal:0},{n:2,max:20,goal:L2_GOAL},{n:3,max:30,goal:L3_GOAL}];
@@ -644,7 +648,7 @@ function showLearn(){
   $("#back").onclick=showHome;
   $("#goMine").onclick=()=>{beep("ok");showMineSetup()};
   $("#goFarm").onclick=()=>{beep("ok");showFarmSetup()};
-  $("#goFig").onclick=()=>{beep("ok");startRound("fig",{})};
+  $("#goFig").onclick=()=>{beep("ok");showFigSetup()};
   say("¿Qué quieres jugar?");
 }
 function levelRowHTML(sel,unit){return `<div class="lvl-row">${LEVELS.map(L=>{const open=lvlOpen(L.n);return `<button class="btn wood lvl${open?"":" locked"}" data-l="${L.n}" aria-pressed="${open&&L.n===sel}"><span>Nivel ${L.n}</span><small>${open?`${unit} ${L.max}`:`${ICON.lock} ${Math.min(save.earned,L.goal)}/${L.goal}`}</small></button>`}).join("")}</div>`}
@@ -688,7 +692,7 @@ function showFarmSetup(){
 function gameBar(){return `<div class="bar"><button class="btn icon" id="quit" aria-label="Salir">${ICON.back}</button>
   <button class="btn icon" id="again" aria-label="Repetir instrucción">${ICON.speak}</button><div class="spacer"></div>${gemsHTML()}</div>
   <div class="dots">${Array.from({length:ROUNDS},(_,i)=>`<i class="${i<round.i?"done":""}"></i>`).join("")}</div>`}
-function wireBar(text){$("#quit").onclick=()=>{inGame=false;clearTimer();try{speechSynthesis.cancel()}catch(e){}round.kind==="mine"?showMineSetup():round.kind==="farm"?showFarmSetup():showLearn()};$("#again").hidden=!settings.voice;$("#again").onclick=()=>say(text)}
+function wireBar(text){$("#quit").onclick=()=>{inGame=false;clearTimer();try{speechSynthesis.cancel()}catch(e){}round.kind==="mine"?showMineSetup():round.kind==="farm"?showFarmSetup():showFigSetup()};$("#again").hidden=!settings.voice;$("#again").onclick=()=>say(text)}
 function addGems(n,fromEl){save.gems+=n;save.earned=(save.earned||0)+n;round.won+=n;persist();const gc=$("#gemCount");if(gc)gc.textContent=save.gems;
   if(fromEl&&!matchMedia("(prefers-reduced-motion:reduce)").matches){const r=fromEl.getBoundingClientRect(),t=$(".gems").getBoundingClientRect(),app=$("#app").getBoundingClientRect();
     const g=document.createElement("span");g.className="gem fly-gem";g.style.left=(r.left+r.width/2-11-app.left)+"px";g.style.top=(r.top+r.height/2-11-app.top)+"px";$("#app").appendChild(g);
@@ -750,20 +754,40 @@ function farmQ(){
 
 // ---------- Figuras ----------
 const SHAPES=[["circulo","círculo"],["cuadrado","cuadrado"],["triangulo","triángulo"],["rectangulo","rectángulo"],["rombo","rombo"]];
-const SHAPE_COLORS=["#5fae3b","#f5c542","#e2574c","#2f6fd6","#8a4fd1","#b5874e","#2ec26b"];
+const FIG_LEVELS=[{n:1,goal:0,count:3,voice:true,txt:"3 figuras · con voz"},{n:2,goal:200,count:4,voice:false,txt:"4 figuras · sin voz"}];
+const figOpen=n=>save.earned>=FIG_LEVELS[n-1].goal;
+function showFigSetup(){
+  let lvl=figOpen(settings.glvl||1)?(settings.glvl||1):1;
+  screenEl.innerHTML=`<div class="bar"><button class="btn icon" id="back" aria-label="Regresar">${ICON.back}</button><span class="bar-title">Figuras</span><div class="spacer"></div>${gemsHTML()}</div>
+  <div class="setup">
+    <div class="fig-demo"><span class="fig"><i class="shape circulo" style="--c:#e2574c"></i></span><span class="fig"><i class="shape triangulo" style="--c:#f5c542"></i></span><span class="fig"><i class="shape rombo" style="--c:#2f6fd6"></i></span></div>
+    <p class="sec-label">Nivel</p>
+    <div class="lvl-row two">${FIG_LEVELS.map(L=>{const open=figOpen(L.n);return `<button class="btn wood lvl${open?"":" locked"}" data-l="${L.n}" aria-pressed="${open&&L.n===lvl}"><span>Nivel ${L.n}</span><small>${open?L.txt:`${ICON.lock} ${Math.min(save.earned,L.goal)}/${L.goal}`}</small></button>`}).join("")}</div>
+    <button class="btn play" id="play">¡A jugar!</button>
+  </div>`;
+  $("#back").onclick=showLearn;
+  screenEl.querySelectorAll(".lvl").forEach(b=>b.onclick=()=>{const n=+b.dataset.l,L=FIG_LEVELS[n-1];
+    if(!figOpen(n)){beep("no");say(`Junta ${L.goal} esmeraldas para abrir el nivel ${n}. Llevas ${save.earned}`);return}
+    lvl=n;screenEl.querySelectorAll(".lvl").forEach(x=>x.setAttribute("aria-pressed",x===b));beep("ok");
+    say(n===1?"Nivel 1: tres figuras y te leo la palabra":"Nivel 2: cuatro figuras y tú lees la palabra")});
+  $("#play").onclick=()=>{settings.glvl=lvl;saveSettings();beep("ok");startRound("fig",{lvl})};
+  say("Escoge el nivel");
+}
+const SHAPE_COLORS=["#5fae3b","#f5c542","#e2574c","#2f6fd6","#8a4fd1","#b5874e"];
 function figQ(){
   let t;do{t=SHAPES[rnd(0,SHAPES.length-1)]}while(round.last===t[0]);round.last=t[0];
-  const opts=shuffle([t,...shuffle(SHAPES.filter(x=>x!==t)).slice(0,3)]),cols=shuffle([...SHAPE_COLORS]);
-  const text=`¡Busca el ${t[1]}!`;
+  const L=FIG_LEVELS[((round.opt||{}).lvl||1)-1];
+  const opts=shuffle([t,...shuffle(SHAPES.filter(x=>x!==t)).slice(0,L.count-1)]),cols=shuffle([...SHAPE_COLORS]);
+  const text=L.voice?`¡Busca el ${t[1]}!`:"Lee la palabra y busca la figura";
   screenEl.innerHTML=`${gameBar()}
     <div class="fig-word"><small>Busca el</small><span>${t[1]}</span></div>
-    <div class="mine-grid fig-grid" style="--cols:2;--ar:1">${opts.map((o,i)=>`<button class="fig" data-v="${o[0]}" aria-label="${o[1]}"><i class="shape ${o[0]}" style="--c:${cols[i]}"></i></button>`).join("")}</div>`;
+    <div class="mine-grid fig-grid${L.count===3?" three-fig":""}" style="--cols:2;--ar:1">${opts.map((o,i)=>`<button class="fig" data-v="${o[0]}" aria-label="${o[1]}"><i class="shape ${o[0]}" style="--c:${cols[i]}"></i></button>`).join("")}</div>`;
   wireBar(text);say(text);
   let tries=0,done=false;
   screenEl.querySelectorAll(".fig-grid .fig").forEach(b=>b.onclick=()=>{
     if(done)return;const v=b.dataset.v;
     if(v===t[0]){done=true;b.classList.add("win");addGems(tries===0?2:1,b);beep("ok");say(`¡Muy bien! Es un ${t[1]}`);setTimeout(next,1400)}
-    else{tries++;beep("no");b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake");say(`Ese es un ${SHAPES.find(x=>x[0]===v)[1]}. Busca el ${t[1]}`)}
+    else{tries++;beep("no");b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake");say(L.voice?`Ese es un ${SHAPES.find(x=>x[0]===v)[1]}. Busca el ${t[1]}`:"Ese no es. Lee la palabra otra vez")}
   });
 }
 
@@ -777,6 +801,8 @@ function showReward(){inGame=false;
     <div class="menu"><button class="btn" id="replay">Jugar otra vez</button><button class="btn wood" id="home">Inicio</button></div>
   </div>`;
   let msg=`¡Lo lograste, ${save.char.name}! Ganaste ${round.won} esmeraldas`;
+  if(figOpen(2)&&!save.g2Seen){save.g2Seen=true;persist();msg+=". ¡Y abriste el nivel 2 de Figuras!";
+    $(".reward .won").insertAdjacentHTML("afterend",`<p class="hello">¡Figuras nivel 2!</p>`)}
   for(const n of [2,3]){const k="l"+n+"Seen";if(lvlOpen(n)&&!save[k]){save[k]=true;persist();msg+=`. ¡Y abriste el nivel ${n} de Mina Rápida!`;
     $(".reward .won").insertAdjacentHTML("afterend",`<p class="hello">¡Nivel ${n} desbloqueado!</p>`)}}
   say(msg);
