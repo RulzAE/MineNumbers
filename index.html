@@ -309,6 +309,10 @@ h1{font:700 clamp(30px,9vw,44px)/1 var(--font-display);color:#fff;text-shadow:3p
 @media (prefers-reduced-motion:no-preference){.zzz{animation:float 2s ease-in-out infinite}}
 @keyframes float{50%{transform:translateY(-8px)}}
 .muted{font-size:13px;font-weight:500;color:var(--wood-dark);display:block}
+.an-grid{grid-template-columns:repeat(3,1fr)}
+.an-grid .animal-big{width:58px;height:54px}
+.an-grid .animal-big .animal{transform:scale(1.25)}
+.sleep{background:rgba(20,40,80,.25);margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:0 16px}
 /* app shell (PWA) */
 *,*::before,*::after{box-sizing:border-box}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -336,7 +340,7 @@ const DEFAULT_CHAR={name:"",skin:"#e9b98f",hair:"#4a2c17",eye:"#2f6fd6",shirt:"#
 const STORE=[
   {id:"casco",cat:"hat",name:"Casco de minero",price:200},
   {id:"gorra",cat:"hat",name:"Gorra",price:200},
-  {id:"pato",cat:"hat",name:"Pato",price:250},
+  {id:"pato",cat:"hat",name:"Pato",price:300},
   {id:"navidad",cat:"hat",name:"Árbol de Navidad",price:250},
   {id:"vaquero",cat:"hat",name:"Sombrero vaquero",price:250},
   {id:"corona",cat:"hat",name:"Corona",price:300},
@@ -369,7 +373,7 @@ const l2Open=()=>save.earned>=L2_GOAL;
 function hatList(){return [...STORE.filter(i=>i.cat==="hat"&&save.owned.includes(i.id)).map(i=>[i.id,i.name]),["none","Nada"]]}
 // ajustes de este celular (no se sincronizan)
 const SET_KEY="minenumbers-ajustes";
-let settings={sfx:true,voice:true,rest:true,tex:"roca",lvl:1};
+let settings={sfx:true,voice:true,rest:true,tex:"roca",lvl:1,animal:"gallina",flvl:1};
 try{Object.assign(settings,JSON.parse(localStorage.getItem(SET_KEY)||"{}"))}catch(e){}
 function saveSettings(){try{localStorage.setItem(SET_KEY,JSON.stringify(settings))}catch(e){}}
 const LEVELS=[{n:1,max:10,goal:0},{n:2,max:20,goal:L2_GOAL},{n:3,max:30,goal:L3_GOAL}];
@@ -389,7 +393,7 @@ function payload(){const {code,...rest}=save;return rest}
 function adopt(remote){if(!remote||!remote.data)return false;const t=Date.parse(remote.updated_at);if(!(t>(save.updatedAt||0)+1))return false;
   const code=save.code;save=Object.assign({char:{...DEFAULT_CHAR},gems:0,level:1,owned:[]},remote.data,{code,updatedAt:t});
   migrate();writeLocal();return true}
-function onRemoteChange(){const gc=document.getElementById("gemCount");if(gc)gc.textContent=save.gems;if(document.getElementById("goLearn"))showHome()}
+function onRemoteChange(){if(typeof sleeping!=="undefined"&&sleeping)return;const gc=document.getElementById("gemCount");if(gc)gc.textContent=save.gems;if(document.getElementById("goLearn"))showHome()}
 let pushT=null;
 function schedulePush(){if(!save.code)return;clearTimeout(pushT);pushT=setTimeout(pushNow,1200)}
 async function pushNow(){if(!save.code)return;if(!navigator.onLine){syncState.status="offline";return}
@@ -620,9 +624,13 @@ function showLearn(){
   </div>`;
   $("#back").onclick=showHome;
   $("#goMine").onclick=()=>{beep("ok");showMineSetup()};
-  $("#goFarm").onclick=()=>{beep("ok");showChoose("farm")};
+  $("#goFarm").onclick=()=>{beep("ok");showFarmSetup()};
   say("¿Qué quieres jugar?");
 }
+function levelRowHTML(sel,unit){return `<div class="lvl-row">${LEVELS.map(L=>{const open=lvlOpen(L.n);return `<button class="btn wood lvl${open?"":" locked"}" data-l="${L.n}" aria-pressed="${open&&L.n===sel}"><span>Nivel ${L.n}</span><small>${open?`${unit} ${L.max}`:`${ICON.lock} ${Math.min(save.earned,L.goal)}/${L.goal}`}</small></button>`}).join("")}</div>`}
+function wireLevels(onPick,phrase){screenEl.querySelectorAll(".lvl").forEach(b=>b.onclick=()=>{const n=+b.dataset.l,L=LEVELS[n-1];
+  if(!lvlOpen(n)){beep("no");say(`Junta ${L.goal} esmeraldas para abrir el nivel ${n}. Llevas ${save.earned}`);return}
+  onPick(n);screenEl.querySelectorAll(".lvl").forEach(x=>x.setAttribute("aria-pressed",x===b));beep("ok");say(`Nivel ${n}: ${phrase} ${L.max}`)})}
 function showMineSetup(){
   let tex=TEXTURES.some(t=>t[0]===settings.tex)?settings.tex:"roca";
   let lvl=lvlOpen(settings.lvl||1)?(settings.lvl||1):1;
@@ -631,31 +639,36 @@ function showMineSetup(){
     <p class="sec-label">Material</p>
     <div class="tex-grid">${TEXTURES.map(([v,l])=>`<button class="choose tex" data-v="${v}" aria-pressed="${v===tex}"><span class="ore tx-${v} sample">7</span><span>${l}</span></button>`).join("")}</div>
     <p class="sec-label">Nivel</p>
-    <div class="lvl-row">${LEVELS.map(L=>{const open=lvlOpen(L.n);return `<button class="btn wood lvl${open?"":" locked"}" data-l="${L.n}" aria-pressed="${open&&L.n===lvl}"><span>Nivel ${L.n}</span><small>${open?`0 a ${L.max}`:`${ICON.lock} ${Math.min(save.earned,L.goal)}/${L.goal}`}</small></button>`}).join("")}</div>
+    ${levelRowHTML(lvl,"0 a")}
     <button class="btn play" id="play">¡A jugar!</button>
   </div>`;
   $("#back").onclick=showLearn;
   screenEl.querySelectorAll(".tex").forEach(b=>b.onclick=()=>{tex=b.dataset.v;screenEl.querySelectorAll(".tex").forEach(x=>x.setAttribute("aria-pressed",x===b));beep("ok");say(b.textContent.trim())});
-  screenEl.querySelectorAll(".lvl").forEach(b=>b.onclick=()=>{const n=+b.dataset.l,L=LEVELS[n-1];
-    if(!lvlOpen(n)){beep("no");say(`Junta ${L.goal} esmeraldas para abrir el nivel ${n}. Llevas ${save.earned}`);return}
-    lvl=n;screenEl.querySelectorAll(".lvl").forEach(x=>x.setAttribute("aria-pressed",x===b));beep("ok");say(`Nivel ${n}: números del cero al ${L.max}`)});
+  wireLevels(n=>{lvl=n},"números del cero al");
   $("#play").onclick=()=>{settings.tex=tex;settings.lvl=lvl;saveSettings();beep("ok");startRound("mine",{tex,lvl})};
   say("Escoge el material y el nivel");
 }
-function showChoose(kind){
-  const opts=Object.entries(ANIMALS).map(([k,A])=>[k,A.label]);
-  const q="¿Qué animales quieres sumar?";
+function showFarmSetup(){
+  let an=ANIMALS[settings.animal]?settings.animal:"gallina";
+  let lvl=lvlOpen(settings.flvl||1)?(settings.flvl||1):1;
   screenEl.innerHTML=`<div class="bar"><button class="btn icon" id="back" aria-label="Regresar">${ICON.back}</button><span class="bar-title">Granja de Sumas</span><div class="spacer"></div>${gemsHTML()}</div>
-  <p class="prompt">${q}</p>
-  <div class="choose-grid three">${opts.map(([v,l])=>`<button class="choose" data-v="${v}"><span class="animal-big"><span class="animal ${ANIMALS[v].cls}">${ANIMALS[v].parts}</span></span><span>${l}</span></button>`).join("")}</div>`;
+  <div class="setup">
+    <p class="sec-label">Animales</p>
+    <div class="tex-grid an-grid">${Object.entries(ANIMALS).map(([v,A])=>`<button class="choose tex" data-v="${v}" aria-pressed="${v===an}"><span class="animal-big"><span class="animal ${A.cls}">${A.parts}</span></span><span>${A.label}</span></button>`).join("")}</div>
+    <p class="sec-label">Nivel</p>
+    ${levelRowHTML(lvl,"Hasta")}
+    <button class="btn play" id="play">¡A jugar!</button>
+  </div>`;
   $("#back").onclick=showLearn;
-  screenEl.querySelectorAll(".choose").forEach(b=>b.onclick=()=>{beep("ok");startRound(kind,b.dataset.v)});
-  say(q);
+  screenEl.querySelectorAll(".tex").forEach(b=>b.onclick=()=>{an=b.dataset.v;screenEl.querySelectorAll(".tex").forEach(x=>x.setAttribute("aria-pressed",x===b));beep("ok");say(b.textContent.trim())});
+  wireLevels(n=>{lvl=n},"sumas hasta");
+  $("#play").onclick=()=>{settings.animal=an;settings.flvl=lvl;saveSettings();beep("ok");startRound("farm",{animal:an,lvl})};
+  say("Escoge los animales y el nivel");
 }
 function gameBar(){return `<div class="bar"><button class="btn icon" id="quit" aria-label="Salir">${ICON.back}</button>
   <button class="btn icon" id="again" aria-label="Repetir instrucción">${ICON.speak}</button><div class="spacer"></div>${gemsHTML()}</div>
   <div class="dots">${Array.from({length:ROUNDS},(_,i)=>`<i class="${i<round.i?"done":""}"></i>`).join("")}</div>`}
-function wireBar(text){$("#quit").onclick=()=>{inGame=false;clearTimer();try{speechSynthesis.cancel()}catch(e){}showLearn()};$("#again").hidden=!settings.voice;$("#again").onclick=()=>say(text)}
+function wireBar(text){$("#quit").onclick=()=>{inGame=false;clearTimer();try{speechSynthesis.cancel()}catch(e){}round.kind==="mine"?showMineSetup():showFarmSetup()};$("#again").hidden=!settings.voice;$("#again").onclick=()=>say(text)}
 function addGems(n,fromEl){save.gems+=n;save.earned=(save.earned||0)+n;round.won+=n;persist();const gc=$("#gemCount");if(gc)gc.textContent=save.gems;
   if(fromEl&&!matchMedia("(prefers-reduced-motion:reduce)").matches){const r=fromEl.getBoundingClientRect(),t=$(".gems").getBoundingClientRect(),app=$("#app").getBoundingClientRect();
     const g=document.createElement("span");g.className="gem fly-gem";g.style.left=(r.left+r.width/2-11-app.left)+"px";g.style.top=(r.top+r.height/2-11-app.top)+"px";$("#app").appendChild(g);
@@ -688,17 +701,18 @@ function burst(el){if(matchMedia("(prefers-reduced-motion:reduce)").matches)retu
     const a=Math.random()*Math.PI*2,d=50+Math.random()*60;c.animate([{transform:"translate(0,0)",opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d+40}px)`,opacity:0}],{duration:600,easing:"ease-out"}).onfinish=()=>c.remove()}}
 
 // ---------- Granja de sumas ----------
-const animalHTML=A=>`<button class="animal ${A.cls}" aria-label="${A.one}">${A.parts}<i class="n"></i></button>`;
+const animalHTML=(A,z)=>`<button class="animal ${A.cls}" style="zoom:${z}" aria-label="${A.one}">${A.parts}<i class="n"></i></button>`;
 function farmQ(){
-  const max=l2Open()?10:5;const a=rnd(1,max-1),b=rnd(1,max-a),sum=a+b;
+  const o=round.opt||{},lvl=o.lvl||1,max=LEVELS[lvl-1].max;const a=rnd(1,max-1),b=rnd(1,max-a),sum=a+b;
   const opts=new Set([sum]);while(opts.size<3){const d=sum+rnd(-3,3);if(d>=1&&d<=max+2)opts.add(d)}
-  const A=ANIMALS[round.opt]||ANIMALS.gallina,cu=A.fem?"Cuántas":"Cuántos",art=A.fem?"las":"los";
+  const big=Math.max(a,b),z=big<=9?1:big<=16?.7:.5;
+  const A=ANIMALS[o.animal]||ANIMALS.gallina,cu=A.fem?"Cuántas":"Cuántos",art=A.fem?"las":"los";
   const cnt=n=>n===1?`1 ${A.one}`:`${n} ${A.many}`;
   const text=`${cnt(a)} y ${cnt(b)}. ¿${cu} son en total?`;
   screenEl.innerHTML=`${gameBar()}
     <div class="farm">
       <p class="prompt">¿${cu} ${A.many} hay?</p>
-      <div class="pens"><div class="pen" id="penA">${Array.from({length:a},()=>animalHTML(A)).join("")}</div><span class="plus">+</span><div class="pen" id="penB">${Array.from({length:b},()=>animalHTML(A)).join("")}</div></div>
+      <div class="pens"><div class="pen" id="penA">${Array.from({length:a},()=>animalHTML(A,z)).join("")}</div><span class="plus">+</span><div class="pen" id="penB">${Array.from({length:b},()=>animalHTML(A,z)).join("")}</div></div>
       <p class="equation" id="eq">&nbsp;</p>
       <p class="tip">Toca ${art} ${A.many} para contar${art}</p>
       <div class="choices">${shuffle([...opts]).map(n=>`<button class="choice" data-n="${n}">${n}</button>`).join("")}</div>
@@ -753,11 +767,11 @@ const REST_MS=10*60*1000,REST_KEY="minenumbers-tiempo";
 let inGame=false,breakDue=false,playMs=0,lastTick=Date.now();
 try{const t=JSON.parse(localStorage.getItem(REST_KEY)||"{}");if(t.at&&Date.now()-t.at<5*60*1000)playMs=t.ms||0}catch(e){}
 setInterval(()=>{const now=Date.now(),d=now-lastTick;lastTick=now;
-  if(document.visibilityState!=="visible"||!settings.rest||!save.char.name)return;
+  if(sleeping||document.visibilityState!=="visible"||!settings.rest||!save.char.name)return;
   if(d>5*60*1000){playMs=0;return}
   playMs+=d;try{localStorage.setItem(REST_KEY,JSON.stringify({ms:playMs,at:now}))}catch(e){}
   if(playMs>=REST_MS)breakDue=true;
-  if(breakDue&&!inGame&&!document.getElementById("restOk"))showBreak();
+  if(breakDue&&!inGame&&!sleeping&&!document.getElementById("restOk"))showBreak();
 },5000);
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")lastTick=Date.now()});
 function showBreak(){
@@ -771,7 +785,19 @@ function showBreak(){
     <div class="menu"><button class="btn" id="restOk">Está bien</button></div>
   </div>`;
   say(`${save.char.name}, ¡estoy cansado! Es hora de un descanso. Vamos a estirarnos y tomar agua.`);
-  $("#restOk").onclick=()=>{playMs=0;breakDue=false;try{localStorage.setItem(REST_KEY,JSON.stringify({ms:0,at:Date.now()}))}catch(e){}showHome()};
+  $("#restOk").onclick=()=>{playMs=0;breakDue=false;try{localStorage.setItem(REST_KEY,JSON.stringify({ms:0,at:Date.now()}))}catch(e){}showSleep()};
+}
+
+let sleeping=false;
+function showSleep(){
+  sleeping=true;inGame=true;
+  screenEl.innerHTML=`<div class="reward rest sleep">
+    <div class="zzz" aria-hidden="true">Z<span>z</span><span>z</span></div>
+    ${avatarHTML(save.char,avSize()+2,"tired")}
+    <p class="hello">Tu minero está durmiendo</p>
+    <p class="tip">Cierra la app y vuelve a jugar más tarde.</p>
+  </div>`;
+  say("Shhh. Buenas noches. A descansar.");
 }
 
 // ---------- install + offline ----------
