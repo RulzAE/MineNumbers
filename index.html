@@ -314,6 +314,22 @@ h1{font:700 clamp(30px,9vw,44px)/1 var(--font-display);color:#fff;text-shadow:3p
 .an-grid .animal-big .animal{transform:scale(1.25)}
 .sleep{background:rgba(20,40,80,.25);margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:0 16px}
 .ore.tx-barro{background-color:#b5633b;background-image:radial-gradient(ellipse at 30% 35%,#cd7c51 0 14%,transparent 15%),radial-gradient(ellipse at 72% 60%,#cd7c51 0 12%,transparent 13%),radial-gradient(circle at 20% 78%,#8f4a2a 0 6%,transparent 7%),radial-gradient(circle at 82% 22%,#8f4a2a 0 5%,transparent 6%),linear-gradient(115deg,transparent 46%,rgba(80,35,15,.35) 46% 49%,transparent 49%);background-size:auto;background-position:0 0;box-shadow:inset 0 -8px 0 #84442a,inset 0 6px 0 rgba(255,255,255,.18)}
+/* Figuras */
+.fig-word{display:flex;flex-direction:column;align-items:center;flex:none;text-align:center}
+.fig-word small{font:700 20px var(--font-body);color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.25)}
+.fig-word span{font:700 clamp(48px,15vw,72px)/1.1 var(--font-body);color:#fff;letter-spacing:.02em;
+  text-shadow:3px 0 #1d4f91,-3px 0 #1d4f91,0 3px #1d4f91,0 -3px #1d4f91,2px 2px #1d4f91,-2px 2px #1d4f91,2px -2px #1d4f91,-2px -2px #1d4f91,0 7px 0 rgba(0,0,0,.18)}
+.fig{aspect-ratio:1;max-width:100%;border:0;cursor:pointer;background:var(--paper);box-shadow:0 0 0 4px var(--wood-dark),inset 0 -6px 0 #e0d4b8;display:flex;align-items:center;justify-content:center;padding:0}
+.fig:focus-visible{outline:4px solid var(--gold);outline-offset:4px}
+.fig.win{box-shadow:0 0 0 6px var(--gold),inset 0 -6px 0 #e0d4b8}
+@media (prefers-reduced-motion:no-preference){.fig.shake{animation:shake .35s}.fig.win .shape{animation:pulse .5s ease-in-out 2}}
+.shape{display:block;background:linear-gradient(transparent 78%,rgba(0,0,0,.18) 78%),var(--c)}
+.shape.circulo{width:66%;height:66%;border-radius:50%}
+.shape.cuadrado{width:60%;height:60%}
+.shape.triangulo{width:74%;height:64%;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.shape.rectangulo{width:82%;height:46%}
+.shape.rombo{width:60%;height:80%;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.row-fig{width:72px;flex:none;box-shadow:inset 0 0 0 3px #e0d4b8}
 /* app shell (PWA) */
 *,*::before,*::after{box-sizing:border-box}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -609,7 +625,8 @@ function escape(s){return s.replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&
 
 // ---------- round flow ----------
 const ROUNDS=5;let round=null;
-function startRound(kind,opt){inGame=true;round={kind,opt,i:0,won:0};kind==="mine"?mineQ():farmQ()}
+const QUESTION={mine:()=>mineQ(),farm:()=>farmQ(),fig:()=>figQ()};
+function startRound(kind,opt){inGame=true;round={kind,opt,i:0,won:0};QUESTION[kind]()}
 const TEXTURES=[["jardin","Jardín"],["piedra","Piedra"],["madera","Madera"],["barro","Barro"]];
 const ANIMALS={
   gallina:{one:"gallina",many:"gallinas",fem:true,cls:"hen",label:"Gallinas",parts:'<i class="b"></i><i class="h"></i><i class="c"></i><i class="k"></i><i class="e"></i><i class="l"></i>'},
@@ -622,10 +639,12 @@ function showLearn(){
   <div class="choose-grid three">
     <button class="choose" id="goMine"><span class="ore tx-jardin sample row-sample">5</span><span>Mina Rápida</span></button>
     <button class="choose" id="goFarm"><span class="animal-big"><span class="animal hen">${ANIMALS.gallina.parts}</span></span><span>Granja de Sumas</span></button>
+    <button class="choose" id="goFig"><span class="fig row-fig"><i class="shape triangulo" style="--c:#f5c542"></i></span><span>Figuras</span></button>
   </div>`;
   $("#back").onclick=showHome;
   $("#goMine").onclick=()=>{beep("ok");showMineSetup()};
   $("#goFarm").onclick=()=>{beep("ok");showFarmSetup()};
+  $("#goFig").onclick=()=>{beep("ok");startRound("fig",{})};
   say("¿Qué quieres jugar?");
 }
 function levelRowHTML(sel,unit){return `<div class="lvl-row">${LEVELS.map(L=>{const open=lvlOpen(L.n);return `<button class="btn wood lvl${open?"":" locked"}" data-l="${L.n}" aria-pressed="${open&&L.n===sel}"><span>Nivel ${L.n}</span><small>${open?`${unit} ${L.max}`:`${ICON.lock} ${Math.min(save.earned,L.goal)}/${L.goal}`}</small></button>`}).join("")}</div>`}
@@ -669,12 +688,12 @@ function showFarmSetup(){
 function gameBar(){return `<div class="bar"><button class="btn icon" id="quit" aria-label="Salir">${ICON.back}</button>
   <button class="btn icon" id="again" aria-label="Repetir instrucción">${ICON.speak}</button><div class="spacer"></div>${gemsHTML()}</div>
   <div class="dots">${Array.from({length:ROUNDS},(_,i)=>`<i class="${i<round.i?"done":""}"></i>`).join("")}</div>`}
-function wireBar(text){$("#quit").onclick=()=>{inGame=false;clearTimer();try{speechSynthesis.cancel()}catch(e){}round.kind==="mine"?showMineSetup():showFarmSetup()};$("#again").hidden=!settings.voice;$("#again").onclick=()=>say(text)}
+function wireBar(text){$("#quit").onclick=()=>{inGame=false;clearTimer();try{speechSynthesis.cancel()}catch(e){}round.kind==="mine"?showMineSetup():round.kind==="farm"?showFarmSetup():showLearn()};$("#again").hidden=!settings.voice;$("#again").onclick=()=>say(text)}
 function addGems(n,fromEl){save.gems+=n;save.earned=(save.earned||0)+n;round.won+=n;persist();const gc=$("#gemCount");if(gc)gc.textContent=save.gems;
   if(fromEl&&!matchMedia("(prefers-reduced-motion:reduce)").matches){const r=fromEl.getBoundingClientRect(),t=$(".gems").getBoundingClientRect(),app=$("#app").getBoundingClientRect();
     const g=document.createElement("span");g.className="gem fly-gem";g.style.left=(r.left+r.width/2-11-app.left)+"px";g.style.top=(r.top+r.height/2-11-app.top)+"px";$("#app").appendChild(g);
     g.animate([{transform:"translate(0,0) scale(1.6)"},{transform:`translate(${t.left-r.left-r.width/2+20}px,${t.top-r.top-r.height/2+4}px) scale(1)`}],{duration:650,easing:"ease-in"}).onfinish=()=>g.remove()}}
-function next(){if(breakDue){inGame=false;return showBreak()}round.i++;if(round.i>=ROUNDS)return showReward();round.kind==="mine"?mineQ():farmQ()}
+function next(){if(breakDue){inGame=false;return showBreak()}round.i++;if(round.i>=ROUNDS)return showReward();QUESTION[round.kind]()}
 let timer=null;function clearTimer(){if(timer){clearTimeout(timer);timer=null}}
 
 // ---------- Mina rápida ----------
@@ -726,6 +745,25 @@ function farmQ(){
     if(n===sum){done=true;$("#eq").textContent=`${a} + ${b} = ${sum}`;screenEl.querySelectorAll(".pen .animal").forEach(h=>h.classList.add("jump"));
       addGems(1,c);beep("ok");say(`¡Muy bien! ${a} más ${b} son ${sum}`);setTimeout(next,2200)}
     else{beep("no");c.classList.remove("shake");void c.offsetWidth;c.classList.add("shake");say("Casi. Cuéntalas otra vez")}
+  });
+}
+
+// ---------- Figuras ----------
+const SHAPES=[["circulo","círculo"],["cuadrado","cuadrado"],["triangulo","triángulo"],["rectangulo","rectángulo"],["rombo","rombo"]];
+const SHAPE_COLORS=["#5fae3b","#f5c542","#e2574c","#2f6fd6","#8a4fd1","#b5874e","#2ec26b"];
+function figQ(){
+  let t;do{t=SHAPES[rnd(0,SHAPES.length-1)]}while(round.last===t[0]);round.last=t[0];
+  const opts=shuffle([t,...shuffle(SHAPES.filter(x=>x!==t)).slice(0,3)]),cols=shuffle([...SHAPE_COLORS]);
+  const text=`¡Busca el ${t[1]}!`;
+  screenEl.innerHTML=`${gameBar()}
+    <div class="fig-word"><small>Busca el</small><span>${t[1]}</span></div>
+    <div class="mine-grid fig-grid" style="--cols:2;--ar:1">${opts.map((o,i)=>`<button class="fig" data-v="${o[0]}" aria-label="${o[1]}"><i class="shape ${o[0]}" style="--c:${cols[i]}"></i></button>`).join("")}</div>`;
+  wireBar(text);say(text);
+  let tries=0,done=false;
+  screenEl.querySelectorAll(".fig-grid .fig").forEach(b=>b.onclick=()=>{
+    if(done)return;const v=b.dataset.v;
+    if(v===t[0]){done=true;b.classList.add("win");addGems(tries===0?2:1,b);beep("ok");say(`¡Muy bien! Es un ${t[1]}`);setTimeout(next,1400)}
+    else{tries++;beep("no");b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake");say(`Ese es un ${SHAPES.find(x=>x[0]===v)[1]}. Busca el ${t[1]}`)}
   });
 }
 
