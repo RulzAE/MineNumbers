@@ -313,6 +313,7 @@ h1{font:700 clamp(30px,9vw,44px)/1 var(--font-display);color:#fff;text-shadow:3p
 .an-grid .animal-big{width:58px;height:54px}
 .an-grid .animal-big .animal{transform:scale(1.25)}
 .sleep{background:rgba(20,40,80,.25);margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:0 16px}
+.ore.tx-barro{background-color:#b5633b;background-image:radial-gradient(ellipse at 30% 35%,#cd7c51 0 14%,transparent 15%),radial-gradient(ellipse at 72% 60%,#cd7c51 0 12%,transparent 13%),radial-gradient(circle at 20% 78%,#8f4a2a 0 6%,transparent 7%),radial-gradient(circle at 82% 22%,#8f4a2a 0 5%,transparent 6%),linear-gradient(115deg,transparent 46%,rgba(80,35,15,.35) 46% 49%,transparent 49%);background-size:auto;background-position:0 0;box-shadow:inset 0 -8px 0 #84442a,inset 0 6px 0 rgba(255,255,255,.18)}
 /* app shell (PWA) */
 *,*::before,*::after{box-sizing:border-box}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -373,7 +374,7 @@ const l2Open=()=>save.earned>=L2_GOAL;
 function hatList(){return [...STORE.filter(i=>i.cat==="hat"&&save.owned.includes(i.id)).map(i=>[i.id,i.name]),["none","Nada"]]}
 // ajustes de este celular (no se sincronizan)
 const SET_KEY="minenumbers-ajustes";
-let settings={sfx:true,voice:true,rest:true,tex:"roca",lvl:1,animal:"gallina",flvl:1};
+let settings={sfx:true,voice:true,rest:true,tex:"jardin",lvl:1,animal:"gallina",flvl:1};
 try{Object.assign(settings,JSON.parse(localStorage.getItem(SET_KEY)||"{}"))}catch(e){}
 function saveSettings(){try{localStorage.setItem(SET_KEY,JSON.stringify(settings))}catch(e){}}
 const LEVELS=[{n:1,max:10,goal:0},{n:2,max:20,goal:L2_GOAL},{n:3,max:30,goal:L3_GOAL}];
@@ -609,7 +610,7 @@ function escape(s){return s.replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&
 // ---------- round flow ----------
 const ROUNDS=5;let round=null;
 function startRound(kind,opt){inGame=true;round={kind,opt,i:0,won:0};kind==="mine"?mineQ():farmQ()}
-const TEXTURES=[["jardin","Jardín"],["piedra","Piedra"],["madera","Madera"],["roca","Roca"]];
+const TEXTURES=[["jardin","Jardín"],["piedra","Piedra"],["madera","Madera"],["barro","Barro"]];
 const ANIMALS={
   gallina:{one:"gallina",many:"gallinas",fem:true,cls:"hen",label:"Gallinas",parts:'<i class="b"></i><i class="h"></i><i class="c"></i><i class="k"></i><i class="e"></i><i class="l"></i>'},
   cerdo:{one:"cerdo",many:"cerdos",fem:false,cls:"pig",label:"Cerdos",parts:'<i class="b"></i><i class="h"></i><i class="s"></i><i class="e"></i><i class="l"></i>'},
@@ -619,7 +620,7 @@ function showLearn(){
   screenEl.innerHTML=`<div class="bar"><button class="btn icon" id="back" aria-label="Regresar">${ICON.back}</button><span class="bar-title">Aprender</span><div class="spacer"></div>${gemsHTML()}</div>
   <p class="prompt">¿Qué quieres jugar?</p>
   <div class="choose-grid three">
-    <button class="choose" id="goMine"><span class="ore tx-roca sample row-sample">7</span><span>Mina Rápida</span></button>
+    <button class="choose" id="goMine"><span class="ore tx-jardin sample row-sample">5</span><span>Mina Rápida</span></button>
     <button class="choose" id="goFarm"><span class="animal-big"><span class="animal hen">${ANIMALS.gallina.parts}</span></span><span>Granja de Sumas</span></button>
   </div>`;
   $("#back").onclick=showHome;
@@ -632,12 +633,12 @@ function wireLevels(onPick,phrase){screenEl.querySelectorAll(".lvl").forEach(b=>
   if(!lvlOpen(n)){beep("no");say(`Junta ${L.goal} esmeraldas para abrir el nivel ${n}. Llevas ${save.earned}`);return}
   onPick(n);screenEl.querySelectorAll(".lvl").forEach(x=>x.setAttribute("aria-pressed",x===b));beep("ok");say(`Nivel ${n}: ${phrase} ${L.max}`)})}
 function showMineSetup(){
-  let tex=TEXTURES.some(t=>t[0]===settings.tex)?settings.tex:"roca";
+  let tex=TEXTURES.some(t=>t[0]===settings.tex)?settings.tex:"jardin";
   let lvl=lvlOpen(settings.lvl||1)?(settings.lvl||1):1;
   screenEl.innerHTML=`<div class="bar"><button class="btn icon" id="back" aria-label="Regresar">${ICON.back}</button><span class="bar-title">Mina Rápida</span><div class="spacer"></div>${gemsHTML()}</div>
   <div class="setup">
     <p class="sec-label">Material</p>
-    <div class="tex-grid">${TEXTURES.map(([v,l])=>`<button class="choose tex" data-v="${v}" aria-pressed="${v===tex}"><span class="ore tx-${v} sample">7</span><span>${l}</span></button>`).join("")}</div>
+    <div class="tex-grid">${TEXTURES.map(([v,l])=>`<button class="choose tex" data-v="${v}" aria-pressed="${v===tex}"><span class="ore tx-${v} sample">5</span><span>${l}</span></button>`).join("")}</div>
     <p class="sec-label">Nivel</p>
     ${levelRowHTML(lvl,"0 a")}
     <button class="btn play" id="play">¡A jugar!</button>
@@ -684,7 +685,7 @@ function mineQ(){
   screenEl.innerHTML=`${gameBar()}
     <p class="prompt">${text}</p>
     <div class="timebar"><i id="tb"></i></div>
-    <div class="mine-grid" style="--cols:${count===4?2:3};--ar:${count===4?1:1.5}">${nums.map(n=>`<button class="ore tx-${o.tex||"roca"}" data-n="${n}" aria-label="Bloque ${n}">${n}</button>`).join("")}</div>`;
+    <div class="mine-grid" style="--cols:${count===4?2:3};--ar:${count===4?1:1.5}">${nums.map(n=>`<button class="ore tx-${o.tex||"jardin"}" data-n="${n}" aria-label="Bloque ${n}">${n}</button>`).join("")}</div>`;
   wireBar(text);say(text);
   const start=performance.now(),LIMIT=6000;let done=false;
   const tb=$("#tb");tb.animate([{transform:"scaleX(1)"},{transform:"scaleX(0)"}],{duration:LIMIT,fill:"forwards"});
@@ -704,7 +705,7 @@ function burst(el){if(matchMedia("(prefers-reduced-motion:reduce)").matches)retu
 const animalHTML=(A,z)=>`<button class="animal ${A.cls}" style="zoom:${z}" aria-label="${A.one}">${A.parts}<i class="n"></i></button>`;
 function farmQ(){
   const o=round.opt||{},lvl=o.lvl||1,max=LEVELS[lvl-1].max;const a=rnd(1,max-1),b=rnd(1,max-a),sum=a+b;
-  const opts=new Set([sum]);while(opts.size<3){const d=sum+rnd(-3,3);if(d>=1&&d<=max+2)opts.add(d)}
+  const opts=new Set([sum]);while(opts.size<3){const d=sum+rnd(-3,3);if(d>=2&&d<=max)opts.add(d)}
   const big=Math.max(a,b),z=big<=9?1:big<=16?.7:.5;
   const A=ANIMALS[o.animal]||ANIMALS.gallina,cu=A.fem?"Cuántas":"Cuántos",art=A.fem?"las":"los";
   const cnt=n=>n===1?`1 ${A.one}`:`${n} ${A.many}`;
@@ -785,19 +786,24 @@ function showBreak(){
     <div class="menu"><button class="btn" id="restOk">Está bien</button></div>
   </div>`;
   say(`${save.char.name}, ¡estoy cansado! Es hora de un descanso. Vamos a estirarnos y tomar agua.`);
-  $("#restOk").onclick=()=>{playMs=0;breakDue=false;try{localStorage.setItem(REST_KEY,JSON.stringify({ms:0,at:Date.now()}))}catch(e){}showSleep()};
+  $("#restOk").onclick=()=>{playMs=0;breakDue=false;try{localStorage.setItem(SLEEP_KEY,String(Date.now()+SLEEP_MS))}catch(e){}try{localStorage.setItem(REST_KEY,JSON.stringify({ms:0,at:Date.now()}))}catch(e){}showSleep()};
 }
 
 let sleeping=false;
+const SLEEP_KEY="minenumbers-descanso",SLEEP_MS=5*60*1000;
+function sleepUntil(){try{return +localStorage.getItem(SLEEP_KEY)||0}catch(e){return 0}}
 function showSleep(){
   sleeping=true;inGame=true;
   screenEl.innerHTML=`<div class="reward rest sleep">
     <div class="zzz" aria-hidden="true">Z<span>z</span><span>z</span></div>
     ${avatarHTML(save.char,avSize()+2,"tired")}
     <p class="hello">Tu minero está durmiendo</p>
-    <p class="tip">Cierra la app y vuelve a jugar más tarde.</p>
+    <p class="tip" id="sleepTip"></p>
   </div>`;
-  say("Shhh. Buenas noches. A descansar.");
+  const tick=()=>{const t=$("#sleepTip");if(!t)return;const left=sleepUntil()-Date.now();
+    if(left>0){const m=Math.ceil(left/60000);t.textContent=`Vuelve a jugar en ${m} ${m===1?"minuto":"minutos"}.`;setTimeout(tick,5000)}
+    else t.textContent="Ya descansó. Cierra la app y ábrela otra vez para jugar."};
+  tick();say("Shhh. Buenas noches. A descansar.");
 }
 
 // ---------- install + offline ----------
@@ -807,7 +813,7 @@ window.addEventListener("appinstalled",()=>{deferredPrompt=null;const b=document
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 
 if(!save.code&&save.char.name){save.code=newCode();persist()}
-if(!save.code)showWelcome();else{save.char.name?showHome():showCreator();pull()}
+if(!save.code)showWelcome();else if(save.char.name&&sleepUntil()>Date.now()){showSleep();pull()}else{save.char.name?showHome():showCreator();pull()}
 })();
 </script>
 
