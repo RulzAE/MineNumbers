@@ -36,7 +36,7 @@ body{background:var(--sky);color:var(--ink);font-family:var(--font-body);overflo
   linear-gradient(var(--grass) 0 14px,var(--grass-dark) 14px 18px,transparent 18px),
   repeating-linear-gradient(90deg,var(--dirt) 0 22px,var(--dirt-dark) 22px 26px,var(--dirt) 26px 44px);
   padding-bottom:env(safe-area-inset-bottom,0px)}
-.cloud{position:absolute;background:#fff;opacity:.85;height:18px;box-shadow:18px 0 #fff,36px 0 #fff,18px -14px #fff;pointer-events:none}
+.cloud{position:absolute;z-index:0;background:#fff;opacity:.3;height:18px;box-shadow:18px 0 #fff,36px 0 #fff,18px -14px #fff;pointer-events:none}
 @media (prefers-reduced-motion:no-preference){.cloud{animation:drift 60s linear infinite}}
 @keyframes drift{from{transform:translateX(-80px)}to{transform:translateX(110vw)}}
 
@@ -216,7 +216,7 @@ h1{font:700 clamp(30px,9vw,44px)/1 var(--font-display);color:#fff;text-shadow:3p
 .note{margin:0;font:500 15px/1.4 var(--font-body)}
 .ground{display:flex;justify-content:center;align-items:flex-start;padding-top:24px}
 .ver{display:none;font:600 13px var(--font-body);color:#fff;letter-spacing:.04em;text-shadow:1px 1px 0 rgba(0,0,0,.45)}
-.app:has(#goMine) .ver{display:block}
+.app:has(#goLearn) .ver{display:block}
 .ic{width:56px;height:56px;display:flex;justify-content:center;align-items:flex-end;overflow:hidden;background:rgba(255,255,255,.6);box-shadow:inset 0 -3px 0 rgba(0,0,0,.08)}
 .ic.ic-hat{align-items:flex-start;padding-top:2px}
 .pick-ic{position:relative;width:44px;height:50px}
@@ -229,14 +229,16 @@ h1{font:700 clamp(30px,9vw,44px)/1 var(--font-display);color:#fff;text-shadow:3p
 .btn svg.lk{width:20px;height:20px}
 .btn small{font-size:14px;font-weight:600;opacity:.9;font-variant-numeric:tabular-nums}
 .level .btn.locked{opacity:1;background:var(--stone);box-shadow:inset 0 -6px 0 var(--stone-dark),inset 0 4px 0 rgba(255,255,255,.25);gap:6px}
-/* espada (diseño propio: hoja plateada, guarda dorada con gema roja) */
-.avatar[data-tool="espada"] .av-tool{top:calc(var(--s)*9.6);height:calc(var(--s)*2.6);background:#6b4224;box-shadow:inset 0 calc(var(--s)*-.6) 0 #f5c542}
-.avatar[data-tool="espada"] .av-tool::before{content:"";position:absolute;left:calc(var(--s)*-.2);top:calc(var(--s)*-6.8);width:calc(var(--s)*1.3);height:calc(var(--s)*6.4);background:linear-gradient(90deg,#f4f7f9 0 50%,#b7c3cc 50%);clip-path:polygon(0 14%,50% 0,100% 14%,100% 100%,0 100%)}
-.avatar[data-tool="espada"] .av-tool::after{left:calc(var(--s)*-1.25);top:calc(var(--s)*-.75);width:calc(var(--s)*3.4);height:calc(var(--s)*.9);background:radial-gradient(circle,#e2574c 0 calc(var(--s)*.32),transparent calc(var(--s)*.32 + .5px)),#f5c542;clip-path:none}
+/* espadas (diseño propio) */
+.avatar[data-tool="espada"],.sword-ic[data-tool="espada"]{--b1:#f4f7f9;--b2:#b7c3cc;--g:#f5c542;--gem:#e2574c;--hd:#6b4224}
+.avatar[data-tool="espada-morada"],.sword-ic[data-tool="espada-morada"]{--b1:#d6aef8;--b2:#8a4fd1;--g:#c3ccd4;--gem:#2ec26b;--hd:#3b2a5a}
+.avatar:is([data-tool="espada"],[data-tool="espada-morada"]) .av-tool{top:calc(var(--s)*9.6);height:calc(var(--s)*2.6);background:var(--hd);box-shadow:inset 0 calc(var(--s)*-.6) 0 var(--g)}
+.avatar:is([data-tool="espada"],[data-tool="espada-morada"]) .av-tool::before{content:"";position:absolute;left:calc(var(--s)*-.2);top:calc(var(--s)*-6.8);width:calc(var(--s)*1.3);height:calc(var(--s)*6.4);background:linear-gradient(90deg,var(--b1) 0 50%,var(--b2) 50%);clip-path:polygon(0 14%,50% 0,100% 14%,100% 100%,0 100%)}
+.avatar:is([data-tool="espada"],[data-tool="espada-morada"]) .av-tool::after{left:calc(var(--s)*-1.25);top:calc(var(--s)*-.75);width:calc(var(--s)*3.4);height:calc(var(--s)*.9);background:radial-gradient(circle,var(--gem) 0 calc(var(--s)*.32),transparent calc(var(--s)*.32 + .5px)),var(--g);clip-path:none}
 .sword-ic{position:relative;width:44px;height:50px}
-.sword-ic i{position:absolute;left:20px;top:34px;width:6px;height:14px;background:#6b4224;box-shadow:inset 0 -3px 0 #f5c542;transform:rotate(30deg);transform-origin:50% -150%}
-.sword-ic i::before{content:"";position:absolute;left:-1px;top:-30px;width:8px;height:28px;background:linear-gradient(90deg,#f4f7f9 0 50%,#b7c3cc 50%);clip-path:polygon(0 14%,50% 0,100% 14%,100% 100%,0 100%)}
-.sword-ic i::after{content:"";position:absolute;left:-7px;top:-4px;width:20px;height:5px;background:radial-gradient(circle,#e2574c 0 2px,transparent 2.5px),#f5c542}
+.sword-ic i{position:absolute;left:20px;top:34px;width:6px;height:14px;background:var(--hd);box-shadow:inset 0 -3px 0 var(--g);transform:rotate(30deg);transform-origin:50% -150%}
+.sword-ic i::before{content:"";position:absolute;left:-1px;top:-30px;width:8px;height:28px;background:linear-gradient(90deg,var(--b1) 0 50%,var(--b2) 50%);clip-path:polygon(0 14%,50% 0,100% 14%,100% 100%,0 100%)}
+.sword-ic i::after{content:"";position:absolute;left:-7px;top:-4px;width:20px;height:5px;background:radial-gradient(circle,var(--gem) 0 2px,transparent 2.5px),var(--g)}
 /* game setup + textures + animals */
 .choose-grid{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:center;max-width:440px;width:100%;margin:0 auto;min-height:0}
 .choose-grid.three{grid-template-columns:1fr}
@@ -262,6 +264,43 @@ h1{font:700 clamp(30px,9vw,44px)/1 var(--font-display);color:#fff;text-shadow:3p
 .cow .l{left:4px;top:32px;width:5px;height:8px;background:#222;box-shadow:20px 0 #222}
 .btn.danger{background:var(--bad);box-shadow:inset 0 -6px 0 #a83a31,inset 0 4px 0 rgba(255,255,255,.2)}
 .confirm{display:grid;gap:10px;padding:12px;background:#fdecea;box-shadow:inset 0 0 0 3px var(--bad)}
+/* sin scroll: todo cabe en pantalla (salvo creador y tienda) */
+.screen{position:relative;z-index:1;overflow:hidden}
+.home{overflow:hidden!important}
+.logo{width:min(100%,320px,42vh)}
+@supports (height:1dvh){.logo{width:min(100%,320px,42dvh)}}
+.menu .btn{min-height:clamp(52px,8vh,64px)}
+.mine-grid{max-width:min(440px,calc((100vh - 330px) * var(--ar,1)))}
+@supports (height:1dvh){.mine-grid{max-width:min(440px,calc((100dvh - 330px) * var(--ar,1)))}}
+.choices{max-width:min(440px,46vh)}
+.pen{min-height:96px}
+.farm{gap:10px}
+.row-sample{width:72px!important;flex:none;font-size:36px!important}
+.setup{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:12px;max-width:440px;width:100%;margin:0 auto}
+.sec-label{margin:0;font:700 20px var(--font-body);color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.3)}
+.tex-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.choose.tex{padding:8px 6px;font-size:15px;gap:6px}
+.choose.tex .sample{font-size:28px;max-width:72px}
+.choose[aria-pressed="true"]{box-shadow:0 0 0 4px var(--ink),inset 0 -6px 0 #e0d4b8;background:#fff6d6}
+.lvl-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.btn.lvl{flex-direction:column;gap:2px;min-height:64px;padding:8px 6px;font-size:19px}
+.btn.lvl small{display:flex;align-items:center;gap:4px;font-size:13px}
+.btn.lvl small svg{width:14px;height:14px}
+.btn.lvl[aria-pressed="true"]{outline:4px solid var(--ink);outline-offset:2px}
+.btn.lvl.locked{background:var(--stone);box-shadow:inset 0 -6px 0 var(--stone-dark),inset 0 4px 0 rgba(255,255,255,.25)}
+.btn.play{margin-top:4px}
+/* configuración */
+.cfg{flex:1;min-height:0;display:flex;flex-direction:column;gap:14px;overflow-y:auto;padding:4px 4px 12px}
+.cfg-sec{display:grid;gap:10px}
+.cfg .row-label{margin:0}
+.sw-row{display:flex;align-items:center;justify-content:space-between;gap:12px;font:600 18px var(--font-body)}
+.toggle{min-width:128px;min-height:46px;border:0;cursor:pointer;font:700 17px var(--font-body);color:#fff;background:var(--stone);box-shadow:inset 0 -5px 0 var(--stone-dark)}
+.toggle[aria-checked="true"]{background:var(--grass);box-shadow:inset 0 -5px 0 var(--grass-dark)}
+.toggle:focus-visible{outline:4px solid var(--gold);outline-offset:2px}
+.row3{display:flex;gap:8px}
+.btn.sm{min-height:48px;font-size:16px;padding:10px 8px;flex:1}
+.cfg .code-box{font-size:24px;padding:8px}
+@media (max-height:700px){.btn{min-height:52px;padding:12px 14px;font-size:20px}.prompt{font-size:22px}.hello{font-size:22px}.equation{font-size:28px;min-height:34px}}
 /* app shell (PWA) */
 *,*::before,*::after{box-sizing:border-box}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -293,22 +332,22 @@ const STORE=[
   {id:"navidad",cat:"hat",name:"Árbol de Navidad",price:25},
   {id:"vaquero",cat:"hat",name:"Sombrero vaquero",price:25},
   {id:"corona",cat:"hat",name:"Corona",price:30},
-  {id:"diamante",cat:"hat",name:"Casco de diamante",price:30},
   {id:"pico-madera",cat:"tool",name:"Pico de madera",price:20},
   {id:"pico-oro",cat:"tool",name:"Pico de oro",price:20},
   {id:"espada",cat:"tool",name:"Espada",price:30},
+  {id:"espada-morada",cat:"tool",name:"Espada morada",price:35},
   {id:"gallina",cat:"pet",name:"Gallina",price:50},
   {id:"cerdito",cat:"pet",name:"Cerdito",price:50}
 ];
-const L2_GOAL=100;
+const L2_GOAL=100,L3_GOAL=200;
 const CATS={hat:"Sombreros",tool:"En la mano",pet:"Mascotas"};
 const OPTS={
   skin:["#f6d2b4","#e9b98f","#c99067","#a56b43","#6e4428"],
-  hair:["#1c1c1c","#4a2c17","#8a5a2b","#e1b44a","#c4522c","#f2f2f2"],
+  hair:["#1c1c1c","#4a2c17","#8a5a2b","#e1b44a","#c4522c"],
   eye:["#2f6fd6","#3a8a3a","#5a3a1c","#1c1c1c","#8a4fd1"],
-  shirt:["#2fa4c9","#d8433a","#3fae4a","#f2c230","#8a4fd1","#f27a2c","#ffffff","#222222"],
-  pants:["#3a4a9a","#2b2b2b","#6b4224","#3f7f26","#8a8a8a","#b03a6e"],
-  cap:["#d8433a","#2f6fd6","#3fae4a","#222222"]
+  shirt:["#2fa4c9","#d8433a","#3fae4a","#f2c230","#8a4fd1"],
+  pants:["#3a4a9a","#2b2b2b","#6b4224","#3f7f26","#b03a6e"],
+  cap:["#d8433a","#2f6fd6","#3fae4a","#f2c230","#222222"]
 };
 let save={char:{...DEFAULT_CHAR},gems:0,level:1,owned:[]};
 const KEY="minenumbers";
@@ -320,6 +359,14 @@ function migrate(){save.char={...DEFAULT_CHAR,...save.char};if(!Array.isArray(sa
 migrate();
 const l2Open=()=>save.earned>=L2_GOAL;
 function hatList(){return [...STORE.filter(i=>i.cat==="hat"&&save.owned.includes(i.id)).map(i=>[i.id,i.name]),["none","Nada"]]}
+// ajustes de este celular (no se sincronizan)
+const SET_KEY="minenumbers-ajustes";
+let settings={sfx:true,voice:true,tex:"roca",lvl:1};
+try{Object.assign(settings,JSON.parse(localStorage.getItem(SET_KEY)||"{}"))}catch(e){}
+function saveSettings(){try{localStorage.setItem(SET_KEY,JSON.stringify(settings))}catch(e){}}
+const LEVELS=[{n:1,max:10,goal:0},{n:2,max:20,goal:L2_GOAL},{n:3,max:30,goal:L3_GOAL}];
+const lvlOpen=n=>save.earned>=LEVELS[n-1].goal;
+const avSize=()=>window.innerHeight<720?6:8;
 function writeLocal(){try{localStorage.setItem(KEY,JSON.stringify(save))}catch(e){}}
 function persist(){save.updatedAt=Date.now();writeLocal();schedulePush()}
 
@@ -334,7 +381,7 @@ function payload(){const {code,...rest}=save;return rest}
 function adopt(remote){if(!remote||!remote.data)return false;const t=Date.parse(remote.updated_at);if(!(t>(save.updatedAt||0)+1))return false;
   const code=save.code;save=Object.assign({char:{...DEFAULT_CHAR},gems:0,level:1,owned:[]},remote.data,{code,updatedAt:t});
   migrate();writeLocal();return true}
-function onRemoteChange(){const gc=document.getElementById("gemCount");if(gc)gc.textContent=save.gems;if(document.getElementById("goMine"))showHome()}
+function onRemoteChange(){const gc=document.getElementById("gemCount");if(gc)gc.textContent=save.gems;if(document.getElementById("goLearn"))showHome()}
 let pushT=null;
 function schedulePush(){if(!save.code)return;clearTimeout(pushT);pushT=setTimeout(pushNow,1200)}
 async function pushNow(){if(!save.code)return;if(!navigator.onLine){syncState.status="offline";return}
@@ -360,20 +407,18 @@ const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 
 // ---------- voice & sound ----------
-let voice=null,onVoices=null;
-function pickVoice(){const v=speechSynthesis.getVoices();voice=v.find(x=>/es[-_]MX/i.test(x.lang))||v.find(x=>/es[-_]US/i.test(x.lang))||v.find(x=>/^es/i.test(x.lang))||null;onVoices&&onVoices()}
+let voice=null;
+function pickVoice(){const v=speechSynthesis.getVoices();voice=v.find(x=>/es[-_]MX/i.test(x.lang))||v.find(x=>/es[-_]US/i.test(x.lang))||v.find(x=>/^es/i.test(x.lang))||null}
 if("speechSynthesis" in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
-function say(t,onInfo){try{
-  if(!("speechSynthesis" in window)){onInfo&&onInfo("no-api");return}
-  const go=()=>{const u=new SpeechSynthesisUtterance(t);u.lang=voice?voice.lang:"es-MX";if(voice)u.voice=voice;u.rate=.95;u.pitch=1.1;
-    let started=false;u.onstart=()=>{started=true;onInfo&&onInfo("start")};u.onerror=e=>{if(e.error!=="interrupted"&&e.error!=="canceled")onInfo&&onInfo("error:"+(e.error||"desconocido"))};
-    speechSynthesis.speak(u);if(onInfo)setTimeout(()=>{if(!started)onInfo("timeout")},3000)};
+function say(t){try{
+  if(!settings.voice||!("speechSynthesis" in window))return;
+  const go=()=>{const u=new SpeechSynthesisUtterance(t);u.lang=voice?voice.lang:"es-MX";if(voice)u.voice=voice;u.rate=.95;u.pitch=1.1;speechSynthesis.speak(u)};
   if(speechSynthesis.speaking||speechSynthesis.pending){speechSynthesis.cancel();setTimeout(go,80)}else go();
-}catch(e){onInfo&&onInfo("error:"+e.message)}}
+}catch(e){}}
 let actx=null;
 function getCtx(){if(!actx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;actx=new C()}if(actx.state==="suspended")actx.resume();return actx}
 document.addEventListener("pointerdown",()=>{try{const c=getCtx();if(c){const b=c.createBuffer(1,1,22050),s=c.createBufferSource();s.buffer=b;s.connect(c.destination);s.start(0)}}catch(e){}},{once:true});
-function beep(type){try{const ctx=getCtx();if(!ctx)return;const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);const t=ctx.currentTime;
+function beep(type){try{if(!settings.sfx)return;const ctx=getCtx();if(!ctx)return;const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);const t=ctx.currentTime;
   if(type==="ok"){o.type="square";o.frequency.setValueAtTime(660,t);o.frequency.setValueAtTime(990,t+.08)}
   else if(type==="break"){o.type="sawtooth";o.frequency.setValueAtTime(180,t);o.frequency.exponentialRampToValueAtTime(60,t+.15)}
   else{o.type="triangle";o.frequency.setValueAtTime(260,t);o.frequency.setValueAtTime(200,t+.1)}
@@ -399,7 +444,7 @@ function avatarHTML(c,size=8,extra=""){
   <div class="av-eye l"></div><div class="av-eye r"></div><div class="av-mouth"></div><div class="av-hat"></div><div class="av-tool"></div></div>${pet}</div>`}
 function itemIcon(i){
   if(i.cat==="hat")return `<span class="ic ic-hat">${avatarHTML({...save.char,hat:i.id,tool:"none",pet:"none"},4)}</span>`;
-  if(i.id==="espada")return `<span class="ic"><span class="sword-ic"><i></i></span></span>`;
+  if(i.id.startsWith("espada"))return `<span class="ic"><span class="sword-ic" data-tool="${i.id}"><i></i></span></span>`;
   if(i.cat==="tool")return `<span class="ic"><span class="pick-ic" data-tool="${i.id}"><i></i></span></span>`;
   return `<span class="ic"><span class="pet" style="--k:1">${PETS[i.id]||""}</span></span>`}
 function gemsHTML(){return `<div class="gems" aria-label="Esmeraldas"><span class="gem"></span><span id="gemCount">${save.gems}</span></div>`}
@@ -475,109 +520,75 @@ function showStore(){
   say("¡Bienvenido a la tienda! Toca algo para probártelo");
 }
 
-// ---------- sound check ----------
-function showSound(){
-  const wv=/; wv\)/.test(navigator.userAgent);
-  let last=null;
+// ---------- configuración ----------
+function showConfig(){
+  const tg=(id,on)=>`<button class="toggle" id="${id}" role="switch" aria-checked="${on}">${on?"Encendido":"Apagado"}</button>`;
   screenEl.innerHTML=`
-  <div class="bar"><button class="btn icon" id="back" aria-label="Regresar">${ICON.back}</button><span class="bar-title">Papás</span><div class="spacer"></div></div>
-  <div class="creator">
-    <div class="panel" style="display:grid;gap:14px">
+  <div class="bar"><button class="btn icon" id="back" aria-label="Regresar">${ICON.back}</button><span class="bar-title">Configuración</span><div class="spacer"></div></div>
+  <div class="cfg">
+    <div class="panel cfg-sec">
+      <p class="row-label">Sonido</p>
+      <div class="sw-row"><span>Efectos de Sonido</span>${tg("tSfx",settings.sfx)}</div>
+      <div class="sw-row"><span>Voces de Lectura</span>${tg("tVoice",settings.voice)}</div>
+    </div>
+    <div class="panel cfg-sec">
       <p class="row-label">Código familiar</p>
       <div class="code-box" id="codeBox">${save.code||"—"}</div>
       <p class="form-msg" id="syncMsg"></p>
-      <div class="level"><button class="btn" id="cpy">Copiar</button><button class="btn wood" id="syncNow">Sincronizar</button></div>
-      <p class="note">En otro celular abre MineNumbers, toca "Ya tengo un código" y escribe este código para seguir la misma partida.</p>
-      <button class="btn stone" id="otherCode" style="min-height:52px;font-size:18px">Usar otro código</button>
+      <div class="row3"><button class="btn sm" id="cpy">Copiar</button><button class="btn wood sm" id="syncNow">Sincronizar</button><button class="btn stone sm" id="otherCode">Otro código</button></div>
       <div class="join" id="otherForm" hidden>
         <input class="name-in" id="codeIn2" placeholder="MINA-AB12-CD34" autocomplete="off" autocapitalize="characters" maxlength="14" aria-label="Otro código">
         <p class="form-msg" id="codeMsg2">La partida de este celular se cambiará por la del código.</p>
-        <button class="btn" id="codeGo2">Cambiar de partida</button>
+        <button class="btn sm" id="codeGo2">Cambiar de partida</button>
       </div>
-      <p class="row-label" style="margin-top:10px">Reiniciar partida</p>
-      <button class="btn danger" id="resetBtn" style="min-height:52px;font-size:18px">Reiniciar partida</button>
+    </div>
+    <div class="panel cfg-sec">
+      <button class="btn danger sm" id="resetBtn">Reiniciar partida</button>
       <div class="confirm" id="resetConfirm" hidden>
-        <p class="note"><b>¿Seguro?</b> Se borran el minero, las esmeraldas, las compras y el avance al nivel 2, en este y en todos los celulares con este código. No se puede deshacer.</p>
-        <div class="level"><button class="btn danger" id="resetYes">Sí, reiniciar</button><button class="btn wood" id="resetNo">Cancelar</button></div>
+        <p class="note"><b>¿Seguro?</b> Se borran minero, esmeraldas, compras y niveles en todos los celulares con este código. No se puede deshacer.</p>
+        <div class="row3"><button class="btn danger sm" id="resetYes">Sí, reiniciar</button><button class="btn wood sm" id="resetNo">Cancelar</button></div>
       </div>
-      <p class="row-label" style="margin-top:10px">Revisión de sonido</p>
-      <div class="diag" id="diag"></div>
-      <button class="btn" id="tBeep">Probar efectos</button>
-      <button class="btn wood" id="tVoice">Probar voz</button>
-      <p class="row-label" style="margin-top:6px">Qué revisar</p>
-      <ul class="tips" id="tips"></ul>
     </div>
   </div>`;
-  const render=()=>{
-    const hasTTS="speechSynthesis" in window,vs=hasTTS?speechSynthesis.getVoices():[],es=vs.filter(v=>/^es/i.test(v.lang));
-    const C=window.AudioContext||window.webkitAudioContext;
-    const rows=[
-      ["Efectos de sonido",!C?"No disponibles":actx?(actx.state==="running"?"Activos":"Bloqueados ("+actx.state+")"):"Sin probar",!!C&&(!actx||actx.state==="running")],
-      ["Voz del teléfono",hasTTS?"Disponible":"No disponible",hasTTS],
-      ["Voces en español",hasTTS?String(es.length):"0",es.length>0],
-      ["Voz elegida",voice?voice.name:"Ninguna",!!voice],
-      ["Abierto en",wv?"Una app":"Navegador",!wv]
-    ];
-    if(last)rows.push(["Prueba de voz",last[0],last[1]]);
-    $("#diag").innerHTML=rows.map(([a,b,ok])=>`<div class="diag-row"><span>${a}</span><b class="${ok?"ok":"bad"}">${escape(b)}</b></div>`).join("");
-    const tips=[];
-    if(!hasTTS||wv)tips.push("Abre el juego en Chrome. Dentro de otras apps la voz casi nunca funciona.");
-    if(hasTTS&&!es.length)tips.push("Instala la voz en español: en Ajustes busca \"Texto a voz\", elige el motor de Google y descarga Español (México o Estados Unidos).");
-    tips.push("Sube el volumen multimedia (no el del timbre) con los botones laterales mientras el juego está abierto.");
-    tips.push("Revisa que el teléfono no esté en modo No molestar ni conectado a unos audífonos Bluetooth.");
-    $("#tips").innerHTML=tips.map(t=>`<li>${t}</li>`).join("");
-  };
-  onVoices=render;render();
+  const setTg=(el,on)=>{el.setAttribute("aria-checked",on);el.textContent=on?"Encendido":"Apagado"};
+  $("#tSfx").onclick=()=>{settings.sfx=!settings.sfx;saveSettings();setTg($("#tSfx"),settings.sfx);beep("ok")};
+  $("#tVoice").onclick=()=>{settings.voice=!settings.voice;saveSettings();setTg($("#tVoice"),settings.voice);
+    if(settings.voice)say("Voces encendidas");else try{speechSynthesis.cancel()}catch(e){}};
   const syncText=()=>{const m=$("#syncMsg");if(!m)return;const s=syncState.status;
-    m.textContent=s==="ok"?"Guardado en la nube a las "+new Date(syncState.at).toLocaleTimeString("es-MX",{hour:"numeric",minute:"2-digit"}):s==="saving"?"Guardando…":s==="offline"?"Sin internet: se guarda en este celular y se sube al reconectar.":s==="error"?"No se pudo conectar con la nube. Se guarda en este celular.":"Aún sin sincronizar."};
+    m.textContent=s==="ok"?"Guardado en la nube a las "+new Date(syncState.at).toLocaleTimeString("es-MX",{hour:"numeric",minute:"2-digit"}):s==="saving"?"Guardando…":s==="offline"?"Sin internet: se guarda en este celular.":s==="error"?"Sin conexión con la nube; se guarda en este celular.":"Aún sin sincronizar."};
   syncText();const syncTimer=setInterval(()=>{if(!document.getElementById("syncMsg"))return clearInterval(syncTimer);syncText()},1000);
   $("#cpy").onclick=()=>{const t=save.code||"";const done=()=>{$("#cpy").textContent="Copiado"};
     try{navigator.clipboard.writeText(t).then(done,()=>{getSelection().selectAllChildren($("#codeBox"))})}catch(e){getSelection().selectAllChildren($("#codeBox"))}};
   $("#syncNow").onclick=async()=>{syncState.status="saving";syncText();await pull();syncText()};
-  $("#otherCode").onclick=()=>{$("#otherForm").hidden=false;$("#otherCode").hidden=true;$("#codeIn2").focus()};
-  $("#codeGo2").onclick=async()=>{if(await joinCode($("#codeIn2").value,$("#codeMsg2"))){onVoices=null;save.char.name?showHome():showCreator()}};
+  $("#otherCode").onclick=()=>{$("#otherForm").hidden=!$("#otherForm").hidden;if(!$("#otherForm").hidden)$("#codeIn2").focus()};
+  $("#codeGo2").onclick=async()=>{if(await joinCode($("#codeIn2").value,$("#codeMsg2")))save.char.name?showHome():showCreator()};
   $("#resetBtn").onclick=()=>{$("#resetBtn").hidden=true;$("#resetConfirm").hidden=false};
   $("#resetNo").onclick=()=>{$("#resetConfirm").hidden=true;$("#resetBtn").hidden=false};
   $("#resetYes").onclick=()=>{const code=save.code;save={char:{...DEFAULT_CHAR},gems:0,level:1,owned:[],earned:0,code};
-    persist();pushNow();onVoices=null;showCreator()};
-  $("#tBeep").onclick=()=>{beep("ok");setTimeout(()=>beep("break"),300);setTimeout(render,400)};
-  $("#tVoice").onclick=()=>{last=["Probando…",true];render();
-    say("Hola, soy tu minero. ¡Vamos a jugar!",info=>{
-      last=info==="start"?["Sí arrancó",true]:info==="timeout"?["No arrancó",false]:info==="no-api"?["No disponible",false]:["Error: "+info.slice(6),false];render()})};
-  $("#back").onclick=()=>{onVoices=null;showHome()};
+    settings.lvl=1;saveSettings();persist();pushNow();showCreator()};
+  $("#back").onclick=showHome;
 }
 
 // ---------- home ----------
 function showHome(){
   screenEl.innerHTML=`
-  <div class="bar"><button class="btn icon" id="goSound" aria-label="Ajustes para papás">${ICON.gear}</button>
+  <div class="bar"><button class="btn icon" id="goCfg" aria-label="Configuración">${ICON.gear}</button>
     <button class="btn wood" id="installBtn" ${deferredPrompt?"":"hidden"} style="min-height:44px;font-size:16px;padding:8px 12px">Instalar</button><div class="spacer"></div>${gemsHTML()}</div>
   <div class="home">
     <img class="logo" src="logo.png" alt="MineNumbers">
-    ${avatarHTML(save.char,8,"happy")}
+    ${avatarHTML(save.char,avSize(),"happy")}
     <p class="hello">¡Hola, ${escape(save.char.name)}!</p>
     <div class="menu">
-      <button class="btn stone" id="goMine">Mina Rápida</button>
-      <button class="btn" id="goFarm">Granja de Sumas</button>
+      <button class="btn" id="goLearn">Aprender</button>
       <button class="btn gemb" id="goShop"><span class="gem"></span> Tienda</button>
-      <div class="level" role="group" aria-label="Nivel">
-        <button class="btn wood" data-l="1" aria-pressed="${save.level===1}">Nivel 1</button>
-        <button class="btn wood${l2Open()?"":" locked"}" data-l="2" aria-pressed="${save.level===2}">${l2Open()?"Nivel 2":`${ICON.lock} Nivel 2 <small>${Math.min(save.earned,L2_GOAL)}/${L2_GOAL}</small>`}</button>
-      </div>
-      <button class="btn wood" id="goEdit" style="min-height:52px;font-size:18px">Cambiar mi minero</button>
+      <button class="btn wood" id="goEdit">Cambiar Mi Minero</button>
     </div>
   </div>`;
-  $("#goMine").onclick=()=>showChoose("mine");
-  $("#goFarm").onclick=()=>showChoose("farm");
+  $("#goLearn").onclick=showLearn;
   $("#goEdit").onclick=showCreator;
   $("#goShop").onclick=showStore;
-  $("#goSound").onclick=showSound;
+  $("#goCfg").onclick=showConfig;
   $("#installBtn").onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();try{await deferredPrompt.userChoice}catch(e){}deferredPrompt=null;$("#installBtn").hidden=true};
-  screenEl.querySelectorAll(".level .btn").forEach(b=>b.onclick=()=>{
-    if(b.dataset.l==="2"&&!l2Open()){beep("no");say(`Junta ${L2_GOAL} esmeraldas para abrir el nivel 2. Llevas ${save.earned}`);return}
-    save.level=+b.dataset.l;persist();
-    screenEl.querySelectorAll(".level .btn").forEach(x=>x.setAttribute("aria-pressed",x===b));beep("ok");
-    say(save.level===1?"Nivel uno: números del uno al diez":"Nivel dos: números hasta el veinte")});
 }
 function escape(s){return s.replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
 
@@ -590,21 +601,51 @@ const ANIMALS={
   cerdo:{one:"cerdo",many:"cerdos",fem:false,cls:"pig",label:"Cerdos",parts:'<i class="b"></i><i class="h"></i><i class="s"></i><i class="e"></i><i class="l"></i>'},
   vaca:{one:"vaca",many:"vacas",fem:true,cls:"cow",label:"Vacas",parts:'<i class="b"></i><i class="h"></i><i class="c"></i><i class="s"></i><i class="e"></i><i class="l"></i>'}
 };
-function showChoose(kind){
-  const isMine=kind==="mine";
-  const opts=isMine?TEXTURES:Object.entries(ANIMALS).map(([k,A])=>[k,A.label]);
-  const q=isMine?"¿De qué quieres tus bloques?":"¿Qué animales quieres sumar?";
-  screenEl.innerHTML=`<div class="bar"><button class="btn icon" id="back" aria-label="Regresar">${ICON.back}</button><span class="bar-title">${isMine?"Mina Rápida":"Granja de Sumas"}</span><div class="spacer"></div>${gemsHTML()}</div>
-  <p class="prompt">${q}</p>
-  <div class="choose-grid${isMine?"":" three"}">${opts.map(([v,l])=>`<button class="choose" data-v="${v}">${isMine?`<span class="ore tx-${v} sample">7</span>`:`<span class="animal-big"><span class="animal ${ANIMALS[v].cls}">${ANIMALS[v].parts}</span></span>`}<span>${l}</span></button>`).join("")}</div>`;
+function showLearn(){
+  screenEl.innerHTML=`<div class="bar"><button class="btn icon" id="back" aria-label="Regresar">${ICON.back}</button><span class="bar-title">Aprender</span><div class="spacer"></div>${gemsHTML()}</div>
+  <p class="prompt">¿Qué quieres jugar?</p>
+  <div class="choose-grid three">
+    <button class="choose" id="goMine"><span class="ore tx-roca sample row-sample">7</span><span>Mina Rápida</span></button>
+    <button class="choose" id="goFarm"><span class="animal-big"><span class="animal hen">${ANIMALS.gallina.parts}</span></span><span>Granja de Sumas</span></button>
+  </div>`;
   $("#back").onclick=showHome;
+  $("#goMine").onclick=()=>{beep("ok");showMineSetup()};
+  $("#goFarm").onclick=()=>{beep("ok");showChoose("farm")};
+  say("¿Qué quieres jugar?");
+}
+function showMineSetup(){
+  let tex=TEXTURES.some(t=>t[0]===settings.tex)?settings.tex:"roca";
+  let lvl=lvlOpen(settings.lvl||1)?(settings.lvl||1):1;
+  screenEl.innerHTML=`<div class="bar"><button class="btn icon" id="back" aria-label="Regresar">${ICON.back}</button><span class="bar-title">Mina Rápida</span><div class="spacer"></div>${gemsHTML()}</div>
+  <div class="setup">
+    <p class="sec-label">Material</p>
+    <div class="tex-grid">${TEXTURES.map(([v,l])=>`<button class="choose tex" data-v="${v}" aria-pressed="${v===tex}"><span class="ore tx-${v} sample">7</span><span>${l}</span></button>`).join("")}</div>
+    <p class="sec-label">Nivel</p>
+    <div class="lvl-row">${LEVELS.map(L=>{const open=lvlOpen(L.n);return `<button class="btn wood lvl${open?"":" locked"}" data-l="${L.n}" aria-pressed="${open&&L.n===lvl}"><span>Nivel ${L.n}</span><small>${open?`0 a ${L.max}`:`${ICON.lock} ${Math.min(save.earned,L.goal)}/${L.goal}`}</small></button>`}).join("")}</div>
+    <button class="btn play" id="play">¡A jugar!</button>
+  </div>`;
+  $("#back").onclick=showLearn;
+  screenEl.querySelectorAll(".tex").forEach(b=>b.onclick=()=>{tex=b.dataset.v;screenEl.querySelectorAll(".tex").forEach(x=>x.setAttribute("aria-pressed",x===b));beep("ok");say(b.textContent.trim())});
+  screenEl.querySelectorAll(".lvl").forEach(b=>b.onclick=()=>{const n=+b.dataset.l,L=LEVELS[n-1];
+    if(!lvlOpen(n)){beep("no");say(`Junta ${L.goal} esmeraldas para abrir el nivel ${n}. Llevas ${save.earned}`);return}
+    lvl=n;screenEl.querySelectorAll(".lvl").forEach(x=>x.setAttribute("aria-pressed",x===b));beep("ok");say(`Nivel ${n}: números del cero al ${L.max}`)});
+  $("#play").onclick=()=>{settings.tex=tex;settings.lvl=lvl;saveSettings();beep("ok");startRound("mine",{tex,lvl})};
+  say("Escoge el material y el nivel");
+}
+function showChoose(kind){
+  const opts=Object.entries(ANIMALS).map(([k,A])=>[k,A.label]);
+  const q="¿Qué animales quieres sumar?";
+  screenEl.innerHTML=`<div class="bar"><button class="btn icon" id="back" aria-label="Regresar">${ICON.back}</button><span class="bar-title">Granja de Sumas</span><div class="spacer"></div>${gemsHTML()}</div>
+  <p class="prompt">${q}</p>
+  <div class="choose-grid three">${opts.map(([v,l])=>`<button class="choose" data-v="${v}"><span class="animal-big"><span class="animal ${ANIMALS[v].cls}">${ANIMALS[v].parts}</span></span><span>${l}</span></button>`).join("")}</div>`;
+  $("#back").onclick=showLearn;
   screenEl.querySelectorAll(".choose").forEach(b=>b.onclick=()=>{beep("ok");startRound(kind,b.dataset.v)});
   say(q);
 }
 function gameBar(){return `<div class="bar"><button class="btn icon" id="quit" aria-label="Salir">${ICON.back}</button>
   <button class="btn icon" id="again" aria-label="Repetir instrucción">${ICON.speak}</button><div class="spacer"></div>${gemsHTML()}</div>
   <div class="dots">${Array.from({length:ROUNDS},(_,i)=>`<i class="${i<round.i?"done":""}"></i>`).join("")}</div>`}
-function wireBar(text){$("#quit").onclick=()=>{clearTimer();speechSynthesis&&speechSynthesis.cancel();showHome()};$("#again").onclick=()=>say(text)}
+function wireBar(text){$("#quit").onclick=()=>{clearTimer();try{speechSynthesis.cancel()}catch(e){}showLearn()};$("#again").hidden=!settings.voice;$("#again").onclick=()=>say(text)}
 function addGems(n,fromEl){save.gems+=n;save.earned=(save.earned||0)+n;round.won+=n;persist();const gc=$("#gemCount");if(gc)gc.textContent=save.gems;
   if(fromEl&&!matchMedia("(prefers-reduced-motion:reduce)").matches){const r=fromEl.getBoundingClientRect(),t=$(".gems").getBoundingClientRect(),app=$("#app").getBoundingClientRect();
     const g=document.createElement("span");g.className="gem fly-gem";g.style.left=(r.left+r.width/2-11-app.left)+"px";g.style.top=(r.top+r.height/2-11-app.top)+"px";$("#app").appendChild(g);
@@ -614,13 +655,13 @@ let timer=null;function clearTimer(){if(timer){clearTimeout(timer);timer=null}}
 
 // ---------- Mina rápida ----------
 function mineQ(){
-  const max=save.level===1?10:20,count=save.level===1?4:6;
-  const target=rnd(1,max);const set=new Set([target]);while(set.size<count)set.add(rnd(1,max));
+  const o=round.opt||{},lvl=o.lvl||1,max=LEVELS[lvl-1].max,count=lvl===1?4:6;
+  const target=rnd(0,max);const set=new Set([target]);while(set.size<count)set.add(rnd(0,max));
   const nums=shuffle([...set]);const text=`¡Pica el ${target}!`;
   screenEl.innerHTML=`${gameBar()}
     <p class="prompt">${text}</p>
     <div class="timebar"><i id="tb"></i></div>
-    <div class="mine-grid" style="--cols:${count===4?2:3}">${nums.map(n=>`<button class="ore tx-${round.opt||"roca"}" data-n="${n}" aria-label="Bloque ${n}">${n}</button>`).join("")}</div>`;
+    <div class="mine-grid" style="--cols:${count===4?2:3};--ar:${count===4?1:1.5}">${nums.map(n=>`<button class="ore tx-${o.tex||"roca"}" data-n="${n}" aria-label="Bloque ${n}">${n}</button>`).join("")}</div>`;
   wireBar(text);say(text);
   const start=performance.now(),LIMIT=6000;let done=false;
   const tb=$("#tb");tb.animate([{transform:"scaleX(1)"},{transform:"scaleX(0)"}],{duration:LIMIT,fill:"forwards"});
@@ -639,7 +680,7 @@ function burst(el){if(matchMedia("(prefers-reduced-motion:reduce)").matches)retu
 // ---------- Granja de sumas ----------
 const animalHTML=A=>`<button class="animal ${A.cls}" aria-label="${A.one}">${A.parts}<i class="n"></i></button>`;
 function farmQ(){
-  const max=save.level===1?5:10;const a=rnd(1,max-1),b=rnd(1,max-a),sum=a+b;
+  const max=l2Open()?10:5;const a=rnd(1,max-1),b=rnd(1,max-a),sum=a+b;
   const opts=new Set([sum]);while(opts.size<3){const d=sum+rnd(-3,3);if(d>=1&&d<=max+2)opts.add(d)}
   const A=ANIMALS[round.opt]||ANIMALS.gallina,cu=A.fem?"Cuántas":"Cuántos",art=A.fem?"las":"los";
   const cnt=n=>n===1?`1 ${A.one}`:`${n} ${A.many}`;
@@ -668,13 +709,13 @@ function showReward(){
   screenEl.innerHTML=`<div class="bar"><div class="spacer"></div>${gemsHTML()}</div>
   <div class="reward">
     <h1>¡Lo lograste!</h1>
-    ${avatarHTML(save.char,10,"happy")}
+    ${avatarHTML(save.char,avSize()+2,"happy")}
     <div class="won"><span class="gem big"></span>+${round.won}</div>
     <div class="menu"><button class="btn" id="replay">Jugar otra vez</button><button class="btn wood" id="home">Inicio</button></div>
   </div>`;
   let msg=`¡Lo lograste, ${save.char.name}! Ganaste ${round.won} esmeraldas`;
-  if(l2Open()&&!save.l2Seen){save.l2Seen=true;persist();msg+=". ¡Y abriste el nivel 2!";
-    $(".reward .won").insertAdjacentHTML("afterend",`<p class="hello">¡Nivel 2 desbloqueado!</p>`)}
+  for(const n of [2,3]){const k="l"+n+"Seen";if(lvlOpen(n)&&!save[k]){save[k]=true;persist();msg+=`. ¡Y abriste el nivel ${n} de Mina Rápida!`;
+    $(".reward .won").insertAdjacentHTML("afterend",`<p class="hello">¡Nivel ${n} desbloqueado!</p>`)}}
   say(msg);
   const k=round.kind,o=round.opt;$("#replay").onclick=()=>startRound(k,o);$("#home").onclick=showHome;
 }
