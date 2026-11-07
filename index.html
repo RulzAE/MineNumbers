@@ -216,7 +216,7 @@ h1{font:700 clamp(30px,9vw,44px)/1 var(--font-display);color:#fff;text-shadow:3p
 .note{margin:0;font:500 15px/1.4 var(--font-body)}
 .ground{display:flex;justify-content:center;align-items:flex-start;padding-top:24px}
 .ver{display:none;font:600 13px var(--font-body);color:#fff;letter-spacing:.04em;text-shadow:1px 1px 0 rgba(0,0,0,.45)}
-.app:has(#goLearn) .ver{display:block}
+.app:has(#goLearn) .ver,.app:has(#startBtn) .ver{display:block}
 .ic{width:56px;height:56px;display:flex;justify-content:center;align-items:flex-end;overflow:hidden;background:rgba(255,255,255,.6);box-shadow:inset 0 -3px 0 rgba(0,0,0,.08)}
 .ic.ic-hat{align-items:flex-start;padding-top:2px}
 .pick-ic{position:relative;width:44px;height:50px}
@@ -334,6 +334,9 @@ h1{font:700 clamp(30px,9vw,44px)/1 var(--font-display);color:#fff;text-shadow:3p
 .fig-demo{display:flex;justify-content:center;gap:12px}
 .fig-demo .fig{width:76px;cursor:default}
 .three-fig .fig:last-child{grid-column:1 / -1;width:50%;justify-self:center}
+.start{gap:18px}
+.btn.start-btn{min-height:72px;font-size:26px;box-shadow:inset 0 -7px 0 var(--grass-dark),inset 0 4px 0 rgba(255,255,255,.25),0 6px 0 rgba(0,0,0,.12)}
+@media (prefers-reduced-motion:no-preference){.btn.start-btn{animation:pulse 1.6s ease-in-out infinite}}
 /* app shell (PWA) */
 *,*::before,*::after{box-sizing:border-box}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -414,7 +417,7 @@ function payload(){const {code,...rest}=save;return rest}
 function adopt(remote){if(!remote||!remote.data)return false;const t=Date.parse(remote.updated_at);if(!(t>(save.updatedAt||0)+1))return false;
   const code=save.code;save=Object.assign({char:{...DEFAULT_CHAR},gems:0,level:1,owned:[]},remote.data,{code,updatedAt:t});
   migrate();writeLocal();return true}
-function onRemoteChange(){if(typeof sleeping!=="undefined"&&sleeping)return;const gc=document.getElementById("gemCount");if(gc)gc.textContent=save.gems;if(document.getElementById("goLearn"))showHome()}
+function onRemoteChange(){if(typeof sleeping!=="undefined"&&sleeping)return;if(document.getElementById("startBtn")&&save.char.name){const h=document.querySelector(".start .hero");if(h)h.outerHTML=avatarHTML(save.char,avSize()+3,"happy")}const gc=document.getElementById("gemCount");if(gc)gc.textContent=save.gems;if(document.getElementById("goLearn"))showHome()}
 let pushT=null;
 function schedulePush(){if(!save.code)return;clearTimeout(pushT);pushT=setTimeout(pushNow,1200)}
 async function pushNow(){if(!save.code)return;if(!navigator.onLine){syncState.status="offline";return}
@@ -877,7 +880,20 @@ window.addEventListener("appinstalled",()=>{deferredPrompt=null;const b=document
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 
 if(!save.code&&save.char.name){save.code=newCode();persist()}
-if(!save.code)showWelcome();else if(save.char.name&&sleepUntil()>Date.now()){showSleep();pull()}else{save.char.name?showHome():showCreator();pull()}
+// ---------- pantalla de inicio ----------
+function showStart(go){
+  const has=!!save.char.name,c=has?save.char:{...DEFAULT_CHAR};
+  screenEl.innerHTML=`<div class="home start">
+    <img class="logo" src="logo.png" alt="MineNumbers">
+    ${avatarHTML(c,avSize()+3,"happy")}
+    ${has?`<p class="hello">¡Hola, ${escape(save.char.name)}!</p>`:""}
+    <div class="menu"><button class="btn start-btn" id="startBtn">Empieza la Aventura</button></div>
+  </div>`;
+  $("#startBtn").onclick=()=>{beep("ok");say(has?`¡Vamos, ${save.char.name}!`:"¡Empieza la aventura!");go()};
+}
+if(!save.code)showStart(showWelcome);
+else if(save.char.name&&sleepUntil()>Date.now()){showSleep();pull()}
+else{showStart(()=>save.char.name?showHome():showCreator());pull()}
 })();
 </script>
 
