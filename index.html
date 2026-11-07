@@ -301,6 +301,14 @@ h1{font:700 clamp(30px,9vw,44px)/1 var(--font-display);color:#fff;text-shadow:3p
 .btn.sm{min-height:48px;font-size:16px;padding:10px 8px;flex:1}
 .cfg .code-box{font-size:24px;padding:8px}
 @media (max-height:700px){.btn{min-height:52px;padding:12px 14px;font-size:20px}.prompt{font-size:22px}.hello{font-size:22px}.equation{font-size:28px;min-height:34px}}
+/* descanso */
+.avatar.tired .av-eye{top:calc(var(--s)*4.5);height:calc(var(--s)*.5);background:#3b2a1a;box-shadow:var(--s) 0 0 #3b2a1a}
+.avatar.tired .av-mouth{width:var(--s);left:calc(var(--s)*3.5);height:var(--s);background:#7a3b2e}
+.zzz{font:700 34px var(--font-body);color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.25);margin-bottom:-14px}
+.zzz span{font-size:.8em;margin-left:2px}.zzz span+span{font-size:.6em}
+@media (prefers-reduced-motion:no-preference){.zzz{animation:float 2s ease-in-out infinite}}
+@keyframes float{50%{transform:translateY(-8px)}}
+.muted{font-size:13px;font-weight:500;color:var(--wood-dark);display:block}
 /* app shell (PWA) */
 *,*::before,*::after{box-sizing:border-box}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -326,20 +334,20 @@ document.getElementById("ver").textContent=`MineNumbers - V.${APP_VERSION} - ${A
 // ---------- state ----------
 const DEFAULT_CHAR={name:"",skin:"#e9b98f",hair:"#4a2c17",eye:"#2f6fd6",shirt:"#2fa4c9",pants:"#3a4a9a",hat:"none",cap:"#d8433a",tool:"none",pet:"none"};
 const STORE=[
-  {id:"casco",cat:"hat",name:"Casco de minero",price:20},
-  {id:"gorra",cat:"hat",name:"Gorra",price:20},
-  {id:"pato",cat:"hat",name:"Pato",price:25},
-  {id:"navidad",cat:"hat",name:"Árbol de Navidad",price:25},
-  {id:"vaquero",cat:"hat",name:"Sombrero vaquero",price:25},
-  {id:"corona",cat:"hat",name:"Corona",price:30},
-  {id:"pico-madera",cat:"tool",name:"Pico de madera",price:20},
-  {id:"pico-oro",cat:"tool",name:"Pico de oro",price:20},
-  {id:"espada",cat:"tool",name:"Espada",price:30},
-  {id:"espada-morada",cat:"tool",name:"Espada morada",price:35},
-  {id:"gallina",cat:"pet",name:"Gallina",price:50},
-  {id:"cerdito",cat:"pet",name:"Cerdito",price:50}
+  {id:"casco",cat:"hat",name:"Casco de minero",price:200},
+  {id:"gorra",cat:"hat",name:"Gorra",price:200},
+  {id:"pato",cat:"hat",name:"Pato",price:250},
+  {id:"navidad",cat:"hat",name:"Árbol de Navidad",price:250},
+  {id:"vaquero",cat:"hat",name:"Sombrero vaquero",price:250},
+  {id:"corona",cat:"hat",name:"Corona",price:300},
+  {id:"pico-madera",cat:"tool",name:"Pico de madera",price:200},
+  {id:"pico-oro",cat:"tool",name:"Pico de oro",price:200},
+  {id:"espada",cat:"tool",name:"Espada",price:300},
+  {id:"espada-morada",cat:"tool",name:"Espada morada",price:350},
+  {id:"gallina",cat:"pet",name:"Gallina",price:500},
+  {id:"cerdito",cat:"pet",name:"Cerdito",price:500}
 ];
-const L2_GOAL=100,L3_GOAL=200;
+const L2_GOAL=500,L3_GOAL=1000;
 const CATS={hat:"Sombreros",tool:"En la mano",pet:"Mascotas"};
 const OPTS={
   skin:["#f6d2b4","#e9b98f","#c99067","#a56b43","#6e4428"],
@@ -361,7 +369,7 @@ const l2Open=()=>save.earned>=L2_GOAL;
 function hatList(){return [...STORE.filter(i=>i.cat==="hat"&&save.owned.includes(i.id)).map(i=>[i.id,i.name]),["none","Nada"]]}
 // ajustes de este celular (no se sincronizan)
 const SET_KEY="minenumbers-ajustes";
-let settings={sfx:true,voice:true,tex:"roca",lvl:1};
+let settings={sfx:true,voice:true,rest:true,tex:"roca",lvl:1};
 try{Object.assign(settings,JSON.parse(localStorage.getItem(SET_KEY)||"{}"))}catch(e){}
 function saveSettings(){try{localStorage.setItem(SET_KEY,JSON.stringify(settings))}catch(e){}}
 const LEVELS=[{n:1,max:10,goal:0},{n:2,max:20,goal:L2_GOAL},{n:3,max:30,goal:L3_GOAL}];
@@ -530,6 +538,7 @@ function showConfig(){
       <p class="row-label">Sonido</p>
       <div class="sw-row"><span>Efectos de Sonido</span>${tg("tSfx",settings.sfx)}</div>
       <div class="sw-row"><span>Voces de Lectura</span>${tg("tVoice",settings.voice)}</div>
+      <div class="sw-row"><span>Aviso de Descanso <small class="muted">cada 10 min</small></span>${tg("tRest",settings.rest)}</div>
     </div>
     <div class="panel cfg-sec">
       <p class="row-label">Código familiar</p>
@@ -554,6 +563,7 @@ function showConfig(){
   $("#tSfx").onclick=()=>{settings.sfx=!settings.sfx;saveSettings();setTg($("#tSfx"),settings.sfx);beep("ok")};
   $("#tVoice").onclick=()=>{settings.voice=!settings.voice;saveSettings();setTg($("#tVoice"),settings.voice);
     if(settings.voice)say("Voces encendidas");else try{speechSynthesis.cancel()}catch(e){}};
+  $("#tRest").onclick=()=>{settings.rest=!settings.rest;saveSettings();setTg($("#tRest"),settings.rest);beep("ok");if(!settings.rest){playMs=0;breakDue=false}};
   const syncText=()=>{const m=$("#syncMsg");if(!m)return;const s=syncState.status;
     m.textContent=s==="ok"?"Guardado en la nube a las "+new Date(syncState.at).toLocaleTimeString("es-MX",{hour:"numeric",minute:"2-digit"}):s==="saving"?"Guardando…":s==="offline"?"Sin internet: se guarda en este celular.":s==="error"?"Sin conexión con la nube; se guarda en este celular.":"Aún sin sincronizar."};
   syncText();const syncTimer=setInterval(()=>{if(!document.getElementById("syncMsg"))return clearInterval(syncTimer);syncText()},1000);
@@ -594,7 +604,7 @@ function escape(s){return s.replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&
 
 // ---------- round flow ----------
 const ROUNDS=5;let round=null;
-function startRound(kind,opt){round={kind,opt,i:0,won:0};kind==="mine"?mineQ():farmQ()}
+function startRound(kind,opt){inGame=true;round={kind,opt,i:0,won:0};kind==="mine"?mineQ():farmQ()}
 const TEXTURES=[["jardin","Jardín"],["piedra","Piedra"],["madera","Madera"],["roca","Roca"]];
 const ANIMALS={
   gallina:{one:"gallina",many:"gallinas",fem:true,cls:"hen",label:"Gallinas",parts:'<i class="b"></i><i class="h"></i><i class="c"></i><i class="k"></i><i class="e"></i><i class="l"></i>'},
@@ -645,12 +655,12 @@ function showChoose(kind){
 function gameBar(){return `<div class="bar"><button class="btn icon" id="quit" aria-label="Salir">${ICON.back}</button>
   <button class="btn icon" id="again" aria-label="Repetir instrucción">${ICON.speak}</button><div class="spacer"></div>${gemsHTML()}</div>
   <div class="dots">${Array.from({length:ROUNDS},(_,i)=>`<i class="${i<round.i?"done":""}"></i>`).join("")}</div>`}
-function wireBar(text){$("#quit").onclick=()=>{clearTimer();try{speechSynthesis.cancel()}catch(e){}showLearn()};$("#again").hidden=!settings.voice;$("#again").onclick=()=>say(text)}
+function wireBar(text){$("#quit").onclick=()=>{inGame=false;clearTimer();try{speechSynthesis.cancel()}catch(e){}showLearn()};$("#again").hidden=!settings.voice;$("#again").onclick=()=>say(text)}
 function addGems(n,fromEl){save.gems+=n;save.earned=(save.earned||0)+n;round.won+=n;persist();const gc=$("#gemCount");if(gc)gc.textContent=save.gems;
   if(fromEl&&!matchMedia("(prefers-reduced-motion:reduce)").matches){const r=fromEl.getBoundingClientRect(),t=$(".gems").getBoundingClientRect(),app=$("#app").getBoundingClientRect();
     const g=document.createElement("span");g.className="gem fly-gem";g.style.left=(r.left+r.width/2-11-app.left)+"px";g.style.top=(r.top+r.height/2-11-app.top)+"px";$("#app").appendChild(g);
     g.animate([{transform:"translate(0,0) scale(1.6)"},{transform:`translate(${t.left-r.left-r.width/2+20}px,${t.top-r.top-r.height/2+4}px) scale(1)`}],{duration:650,easing:"ease-in"}).onfinish=()=>g.remove()}}
-function next(){round.i++;if(round.i>=ROUNDS)return showReward();round.kind==="mine"?mineQ():farmQ()}
+function next(){if(breakDue){inGame=false;return showBreak()}round.i++;if(round.i>=ROUNDS)return showReward();round.kind==="mine"?mineQ():farmQ()}
 let timer=null;function clearTimer(){if(timer){clearTimeout(timer);timer=null}}
 
 // ---------- Mina rápida ----------
@@ -705,7 +715,7 @@ function farmQ(){
 }
 
 // ---------- reward ----------
-function showReward(){
+function showReward(){inGame=false;
   screenEl.innerHTML=`<div class="bar"><div class="spacer"></div>${gemsHTML()}</div>
   <div class="reward">
     <h1>¡Lo lograste!</h1>
@@ -736,6 +746,32 @@ function showWelcome(){
   $("#wHave").onclick=()=>{$("#wMenu").hidden=true;$("#wForm").hidden=false;$("#codeIn").focus()};
   $("#codeBack").onclick=showWelcome;
   $("#codeGo").onclick=async()=>{if(await joinCode($("#codeIn").value,$("#codeMsg")))save.char.name?showHome():showCreator()};
+}
+
+// ---------- aviso de descanso ----------
+const REST_MS=10*60*1000,REST_KEY="minenumbers-tiempo";
+let inGame=false,breakDue=false,playMs=0,lastTick=Date.now();
+try{const t=JSON.parse(localStorage.getItem(REST_KEY)||"{}");if(t.at&&Date.now()-t.at<5*60*1000)playMs=t.ms||0}catch(e){}
+setInterval(()=>{const now=Date.now(),d=now-lastTick;lastTick=now;
+  if(document.visibilityState!=="visible"||!settings.rest||!save.char.name)return;
+  if(d>5*60*1000){playMs=0;return}
+  playMs+=d;try{localStorage.setItem(REST_KEY,JSON.stringify({ms:playMs,at:now}))}catch(e){}
+  if(playMs>=REST_MS)breakDue=true;
+  if(breakDue&&!inGame&&!document.getElementById("restOk"))showBreak();
+},5000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")lastTick=Date.now()});
+function showBreak(){
+  clearTimer();try{speechSynthesis.cancel()}catch(e){}
+  screenEl.innerHTML=`<div class="reward rest">
+    <h1>¡Estoy cansado!</h1>
+    <div class="zzz" aria-hidden="true">Z<span>z</span><span>z</span></div>
+    ${avatarHTML(save.char,avSize()+2,"tired")}
+    <p class="hello">Es hora de un descanso</p>
+    <p class="tip">Vamos a estirarnos, tomar agua y jugar después.</p>
+    <div class="menu"><button class="btn" id="restOk">Está bien</button></div>
+  </div>`;
+  say(`${save.char.name}, ¡estoy cansado! Es hora de un descanso. Vamos a estirarnos y tomar agua.`);
+  $("#restOk").onclick=()=>{playMs=0;breakDue=false;try{localStorage.setItem(REST_KEY,JSON.stringify({ms:0,at:Date.now()}))}catch(e){}showHome()};
 }
 
 // ---------- install + offline ----------
