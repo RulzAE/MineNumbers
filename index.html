@@ -420,11 +420,19 @@ function adopt(remote){if(!remote||!remote.data)return false;const t=Date.parse(
 function onRemoteChange(){if(typeof sleeping!=="undefined"&&sleeping)return;if(document.getElementById("startBtn")&&save.char.name){const h=document.querySelector(".start .hero");if(h)h.outerHTML=avatarHTML(save.char,avSize()+3,"happy")}const gc=document.getElementById("gemCount");if(gc)gc.textContent=save.gems;if(document.getElementById("goLearn"))showHome()}
 let pushT=null;
 function schedulePush(){if(!save.code)return;clearTimeout(pushT);pushT=setTimeout(pushNow,1200)}
+function handleDeleted(){
+  try{localStorage.removeItem(KEY)}catch(e){}
+  save={char:{...DEFAULT_CHAR},gems:0,level:1,owned:[],earned:0};syncState={status:"idle",at:0};
+  inGame=false;sleeping=false;clearTimer();try{speechSynthesis.cancel()}catch(e){}
+  showStart(showWelcome);
+}
 async function pushNow(){if(!save.code)return;if(!navigator.onLine){syncState.status="offline";return}
   try{syncState.status="saving";const r=await rpc("mn_guardar",{p_code:save.code,p_data:payload(),p_updated_at:new Date(save.updatedAt||Date.now()).toISOString()});
+    if(r&&r.deleted)return handleDeleted();
     if(adopt(r))onRemoteChange();syncState={status:"ok",at:Date.now()}}catch(e){syncState.status="error"}}
 async function pull(){if(!save.code)return;if(!navigator.onLine){syncState.status="offline";return}
   try{const r=await rpc("mn_cargar",{p_code:save.code});
+    if(r&&r.deleted)return handleDeleted();
     if(r&&adopt(r))onRemoteChange();else if(!r||Date.parse(r.updated_at)<(save.updatedAt||0)-1)await pushNow();
     syncState={status:"ok",at:Date.now()}}catch(e){syncState.status="error"}}
 async function joinCode(raw,msg){const code=normCode(raw);
@@ -432,6 +440,7 @@ async function joinCode(raw,msg){const code=normCode(raw);
   if(!navigator.onLine){msg.textContent="Necesitas internet para entrar con un código.";return false}
   msg.textContent="Buscando…";
   try{const r=await rpc("mn_cargar",{p_code:code});if(!r){msg.textContent="No encontré ese código. Revísalo e intenta otra vez.";return false}
+    if(r.deleted){msg.textContent="Ese código fue eliminado. Usa otro o crea un jugador nuevo.";return false}
     save={char:{...DEFAULT_CHAR},gems:0,level:1,owned:[],code,updatedAt:0};adopt(r);syncState={status:"ok",at:Date.now()};return true}
   catch(e){msg.textContent="No se pudo conectar. Intenta en un momento.";return false}}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")pull()});

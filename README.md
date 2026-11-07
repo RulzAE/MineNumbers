@@ -7,4 +7,6 @@ Juego de números con bloques para preescolar. App instalable (PWA): funciona si
 - **Tienda:** sombreros, picos y mascotas que se compran con esmeraldas.
 - **Papás:** engrane del inicio → código familiar, sincronización y revisión de sonido.
 
-Archivos: `index.html` (juego), `manifest.webmanifest`, `sw.js` (modo sin internet), `logo.png`, `icons/`.
+- **Administrador:** https://rulzae.github.io/MineNumbers/admin.html (PIN; partidas activas/inactivas, eliminar a distancia).
+
+Archivos: `index.html` (juego), `admin.html` (administrador), `manifest.webmanifest`, `sw.js` (modo sin internet), `logo.png`, `icons/`.
