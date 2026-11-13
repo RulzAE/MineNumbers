@@ -393,8 +393,11 @@ function migrate(){save.char={...DEFAULT_CHAR,...save.char};if(!Array.isArray(sa
   const h=save.char.hat;if(h!=="none"&&!save.owned.includes(h))save.owned.push(h);
   if(save.earned<L2_GOAL)save.level=1}
 migrate();
+// Tienda sin bloqueo: todo se puede usar sin gastar esmeraldas (poner false para volver a cobrar)
+const FREE_SHOP=true;
+const owns=id=>FREE_SHOP||save.owned.includes(id);
 const l2Open=()=>save.earned>=L2_GOAL;
-function hatList(){return [...STORE.filter(i=>i.cat==="hat"&&save.owned.includes(i.id)).map(i=>[i.id,i.name]),["none","Nada"]]}
+function hatList(){return [...STORE.filter(i=>i.cat==="hat"&&owns(i.id)).map(i=>[i.id,i.name]),["none","Nada"]]}
 // ajustes de este celular (no se sincronizan)
 const SET_KEY="minenumbers-ajustes";
 let settings={sfx:true,voice:true,rest:true,tex:"jardin",lvl:1,animal:"gallina",flvl:1,glvl:1};
@@ -540,10 +543,10 @@ function showStore(){
     </div>
   </div>`;
   const draw=()=>{$("#pv").innerHTML=avatarHTML(trial,8)};
-  const tags=()=>STORE.forEach(i=>{const t=$("#tag-"+i.id),own=save.owned.includes(i.id),using=save.char[i.cat]===i.id;
+  const tags=()=>STORE.forEach(i=>{const t=$("#tag-"+i.id),own=owns(i.id),using=save.char[i.cat]===i.id;
     t.innerHTML=using?"Usando":own?"Tuyo":`${ICON.lock}<span class="gem"></span>${i.price}`;t.className="item-tag"+(using?" using":own?" own":"")});
   const act=()=>{const b=$("#act");$("#shopTip").hidden=!!sel;b.hidden=!sel;if(!sel)return;
-    const own=save.owned.includes(sel.id),using=save.char[sel.cat]===sel.id;b.className="btn shop-act";
+    const own=owns(sel.id),using=save.char[sel.cat]===sel.id;b.className="btn shop-act";
     if(using){b.textContent="Quitar";b.classList.add("wood")}
     else if(own){b.textContent="Usar"}
     else if(save.gems>=sel.price){b.innerHTML=`Comprar <span class="gem"></span> ${sel.price}`;b.classList.add("gemb")}
@@ -553,9 +556,9 @@ function showStore(){
     sel=STORE.find(i=>i.id===btn.dataset.id);trial={...save.char,[sel.cat]:sel.id};
     screenEl.querySelectorAll(".item").forEach(x=>x.setAttribute("aria-pressed",x===btn));
     beep("ok");draw();act();
-    const own=save.owned.includes(sel.id);
+    const own=owns(sel.id);
     say(own?`${sel.name}. ¡Ya es tuyo!`:save.gems>=sel.price?`${sel.name}. Cuesta ${sel.price} esmeraldas`:`${sel.name}. Cuesta ${sel.price}. Te faltan ${sel.price-save.gems} esmeraldas`)});
-  $("#act").onclick=()=>{if(!sel)return;const own=save.owned.includes(sel.id),using=save.char[sel.cat]===sel.id;
+  $("#act").onclick=()=>{if(!sel)return;const own=owns(sel.id),using=save.char[sel.cat]===sel.id;
     if(using){save.char[sel.cat]="none";say("Listo, te lo quitaste")}
     else if(own){save.char[sel.cat]=sel.id;say("¡Te queda muy bien!")}
     else if(save.gems>=sel.price){save.gems-=sel.price;save.owned.push(sel.id);save.char[sel.cat]=sel.id;$("#gemCount").textContent=save.gems;beep("ok");say(`¡Compraste ${sel.name}!`)}

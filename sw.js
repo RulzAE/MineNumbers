@@ -1,5 +1,5 @@
 // MineNumbers service worker: abre rápido aunque la señal sea mala.
-const V = "mn-v3";
+const V = "mn-v4";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "logo.png",
   "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-192.png", "icons/maskable-512.png", "icons/favicon-48.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL))); self.skipWaiting(); });
